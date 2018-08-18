@@ -1,0 +1,11 @@
+{{ define "content" }}
+<h3>{{ .Name }}</h3>
+<p>
+    <form name="profile" action="/profile/edit" method="POST">
+        <textarea name="biography">{{ .Biography }}</textarea>
+        <br>
+        <input type="submit" value="Update profile">
+    </form>
+</p>
+{{ end }}
+{{ define "title" }}Edit profile{{ end }}

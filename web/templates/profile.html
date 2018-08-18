@@ -1,0 +1,20 @@
+{{ define "content" }}
+<h3>{{ .Name }}</h3>
+<p>Community member since {{ .MemberSince }} | Authored {{ .PostCount }} posts</p>
+<p>
+    {{ if .Biography }}Biography: <small>{{ .Biography }}</small>{{ end }}
+    {{ if .Self }}
+    <br>
+    <a href="/profile/edit">Edit profile</a>
+    {{ end }}
+</p>
+<hr>
+<ul>
+    {{ range .Posts }}
+    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> on {{ .Date }}</li>
+    {{ else }}
+    This user has not authored any posts yet.
+    {{ end }}
+</ul>
+{{ end }}
+{{ define "title" }}Profile of {{ .Name }}{{ end }}

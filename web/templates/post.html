@@ -1,0 +1,15 @@
+{{ define "content" }}
+<div class="post-header">
+    <p>{{ .Date }}</p>
+    <h3>{{ .Title }} <small>by <a href="/{{ .Author }}">{{ .Author }}</a></small></h3>
+</div>
+<div class="post-content">
+    <p>{{ .Content }}</p>
+</div>
+<div class="post-actions">
+    {{ if .Self }}<a href="edit">Edit</a>{{ end }}
+    <!-- All post actions come here-->
+    <!-- TODO: Add likes and comments -->
+</div>
+{{ end }}
+{{ define "title" }}{{ .Title }} by {{ .Author }}{{ end }}

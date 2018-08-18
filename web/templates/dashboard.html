@@ -1,0 +1,20 @@
+{{ define "content" }}
+<div class="dashboard-group">
+<h3>Latest posts</h3>
+<ul>
+    {{ range .LatestPosts }}
+    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> by {{ .Author }} {{ .Date }}</li>
+    {{ end }}
+</ul>
+</div>
+<div class="dashboard-group">
+<h3>New members</h3>
+<ul>
+    {{ range .LatestUsers }}
+    <li><a href="/{{ .Name }}">{{ .Name }}</a> joined {{ .MemberSince }}</li>
+    {{ end }}
+</ul>
+</div>
+{{ end }}
+
+{{ define "title" }}Dashboard{{ end }}
