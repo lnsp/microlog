@@ -15,7 +15,8 @@
     <p>
         <label for="password">Password</label>
         <input type="password" name="password" placeholder="Password">
-        <br>
+    </p>
+    <p>
         <label for="password_confirm">Password (again)</label>
         <input type="password" name="password_confirm" placeholder="Password (again)">
         <br>
@@ -23,10 +24,10 @@
     </p>
     <p>
         <input type="checkbox" name="accept_tos">
-        <label for="accept_tos">Accept <a href="/legal/terms-of-service">Terms of Service</a> and <a href="/legal/privacy-policy">Privacy Policy</a></label>
+        <label for="accept_tos" style="display: inline">Accept <a href="/legal/terms-of-service">Terms of Service</a> and <a href="/legal/privacy-policy">Privacy Policy</a></label>
     </p>
     <p>
-        <input type="submit" label="Sign up">
+        <input type="submit" value="Sign up" class="button">
     </p>
 </form>
 {{ end }}

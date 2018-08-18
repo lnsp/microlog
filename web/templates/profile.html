@@ -1,19 +1,23 @@
 {{ define "content" }}
-<h3>{{ .Name }}</h3>
-<p>Community member since {{ .MemberSince }} | Authored {{ .PostCount }} posts</p>
+<h2>{{ .Name }}</small></h2>
+{{ if .Biography }}
 <p>
-    {{ if .Biography }}Biography: <small>{{ .Biography }}</small>{{ end }}
-    {{ if .Self }}
-    <br>
-    <a href="/profile/edit">Edit profile</a>
-    {{ end }}
+    <h4>Biography</h4>
+    {{ .Biography }}
 </p>
+{{ end }}
+{{ if .Self }}
+<p>
+    <a href="/profile/edit" class="button-outline">Edit</a>
+    <a href="/profile/delete" class="button-outline">Delete</a>
+</p>
+{{ end }}
 <hr>
-<ul>
+<ul class="item-listing">
     {{ range .Posts }}
-    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> on {{ .Date }}</li>
+    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a><br><small>on {{ .Date }}</small></li>
     {{ else }}
-    This user has not authored any posts yet.
+    This user has not written any posts yet.
     {{ end }}
 </ul>
 {{ end }}

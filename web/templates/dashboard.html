@@ -1,15 +1,15 @@
 {{ define "content" }}
 <div class="dashboard-group">
-<h3>Latest posts</h3>
-<ul>
+<h2>Latest posts</h2>
+<ul class="item-listing">
     {{ range .LatestPosts }}
-    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> by {{ .Author }} {{ .Date }}</li>
+    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> by <a href="/{{ .Author }}">{{ .Author }}</a> {{ .Date }}</li>
     {{ end }}
 </ul>
 </div>
 <div class="dashboard-group">
-<h3>New members</h3>
-<ul>
+<h2>New members</h2>
+<ul class="item-listing">
     {{ range .LatestUsers }}
     <li><a href="/{{ .Name }}">{{ .Name }}</a> joined {{ .MemberSince }}</li>
     {{ end }}

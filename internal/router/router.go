@@ -36,6 +36,7 @@ var (
 	signupTemplate         = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/signup.html"))
 	profileTemplate        = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/profile.html"))
 	profileEditTemplate    = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/profileEdit.html"))
+	profileDeleteTemplate  = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/profileDelete.html"))
 	postTemplate           = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/post.html"))
 	postEditTemplate       = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/postEdit.html"))
 	notFoundTemplate       = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/notfound.html"))
@@ -54,6 +55,8 @@ func New(secret string, data *models.DataSource) http.Handler {
 	serveMux.HandleFunc("/", router.dashboard).Methods("GET")
 	serveMux.HandleFunc("/profile/edit", router.profileEdit).Methods("GET")
 	serveMux.HandleFunc("/profile/edit", router.profileEditSubmit).Methods("POST")
+	serveMux.HandleFunc("/profile/delete", router.profileDelete).Methods("GET")
+	serveMux.HandleFunc("/profile/delete", router.profileDeleteSubmit).Methods("POST")
 	serveMux.HandleFunc("/post", router.postNew).Methods("GET")
 	serveMux.HandleFunc("/post", router.postSubmit).Methods("POST")
 	serveMux.HandleFunc("/legal/privacy-policy", router.privacyPolicy).Methods("GET")
@@ -62,11 +65,13 @@ func New(secret string, data *models.DataSource) http.Handler {
 	serveMux.HandleFunc("/{user}/{post}", router.redirectPost).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/", router.post).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/edit", router.postEdit).Methods("GET")
+	serveMux.HandleFunc("/{user}/{post}/delete", router.postDelete).Methods("GET")
 	return serveMux
 }
 
 type Context struct {
 	ErrorMessage string
+	HeadControls bool
 	SignedIn     bool
 	UserID       uint
 }
@@ -109,7 +114,8 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 	sessionCookie, err := r.Cookie(sessionCookieName)
 	if err != nil {
 		return &Context{
-			SignedIn: false,
+			SignedIn:     false,
+			HeadControls: true,
 		}
 	}
 	claims := tokenClaims{}
@@ -118,17 +124,20 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 	}); err != nil {
 		log.Errorln("Received invalid token:", err)
 		return &Context{
-			SignedIn: false,
+			SignedIn:     false,
+			HeadControls: true,
 		}
 	}
 	return &Context{
-		SignedIn: true,
-		UserID:   claims.ID,
+		SignedIn:     true,
+		UserID:       claims.ID,
+		HeadControls: true,
 	}
 }
 
 func (router *Router) login(w http.ResponseWriter, r *http.Request) {
 	ctx := router.defaultContext(r)
+	ctx.HeadControls = false
 	loginTemplate.Execute(w, ctx)
 }
 
@@ -170,6 +179,7 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) signup(w http.ResponseWriter, r *http.Request) {
 	ctx := router.defaultContext(r)
+	ctx.HeadControls = false
 	signupTemplate.Execute(w, ctx)
 }
 
@@ -296,7 +306,7 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 		router.renderNotFound(w, r, "profile")
 		return
 	}
-	posts, err := router.Data.GetPosts(user.ID)
+	posts, err := router.Data.GetPostsDesc(user.ID)
 	if err != nil {
 		log.Errorln("Failed to get posts for user", user.ID)
 		router.renderNotFound(w, r, "profile")
@@ -359,8 +369,51 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 		router.renderNotFound(w, r, "profile")
 	}
 	biography := r.FormValue("biography")
-	router.Data.SetBiography(ctx.UserID, biography)
+	profileCtx := ProfileContext{
+		Context:   *ctx,
+		Name:      user.Name,
+		Biography: biography,
+	}
+	if !router.Data.ValidateBiography(biography) {
+		profileCtx.ErrorMessage = "Your biography must have at max 240 characters."
+		profileEditTemplate.Execute(w, profileCtx)
+		return
+	}
+	if err := router.Data.SetBiography(ctx.UserID, biography); err != nil {
+		log.Errorln("Failed to set biography:", err)
+	}
 	http.Redirect(w, r, "/"+user.Name, http.StatusSeeOther)
+}
+
+func (router *Router) profileDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := router.defaultContext(r)
+	if !ctx.SignedIn {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	if err := profileDeleteTemplate.Execute(w, ctx); err != nil {
+		log.Errorln("Failed to render profile delete:", err)
+	}
+}
+
+func (router *Router) profileDeleteSubmit(w http.ResponseWriter, r *http.Request) {
+	ctx := router.defaultContext(r)
+	if !ctx.SignedIn {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	router.Data.DeleteUser(ctx.UserID)
+	http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
+}
+
+func (router *Router) postDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := router.postContext(r)
+	if err := router.Data.DeletePost(ctx.UserID, ctx.ID); err != nil {
+		log.Errorln("Failed to delete post:", err)
+		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 type PostContext struct {

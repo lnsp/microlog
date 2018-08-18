@@ -10,9 +10,9 @@
     <textarea name="content" placeholder="Content">{{ .Content }}</textarea>
     </p>
     {{ if .ID }}
-    <input type="submit" value="Edit post">
+    <input type="submit" value="Edit post" class="button">
     {{ else }}
-    <input type="submit" value="Submit post">
+    <input type="submit" value="Submit post" class="button">
     {{ end }}
 </form>
 {{ end }}

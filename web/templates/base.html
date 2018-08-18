@@ -25,16 +25,67 @@
         padding: 0.25em 0.5em;
         border-radius: 0.25em;
     }
+    .item-listing {
+        list-style-type: none;
+        padding: 0;
+    }
+    .item-listing li {
+        padding: 0;
+        margin: 0;
+    }
+    input {
+        padding: 0.25em 0.5em;
+        font-size: 10pt;
+    }
+    .button-outline {
+        padding: 0.25em 0.5em;
+        border: 1px solid #822;
+        color: #822;
+        background-color: #fff;
+        border-radius: 0.2em;
+        text-decoration: none;
+        font-size: 12pt;
+    }
+    .button-outline:hover {
+        border: 1px solid #a00;
+        color: #a00;
+        background-color: #fff;
+    }
+    .button {
+        padding: 0.25em 0.5em;
+        background-color: #822;
+        color: #fff;
+        border-radius: 0.2em;
+        text-decoration: none;
+        border: none;
+        font-size: 12pt;
+    }
+    .button:hover {
+        background-color: #a00;
+        color: #fff;
+        text-decoration: none;
+    }
+    label {
+        margin-bottom: 0.5em;
+        display: block;
+    }
+    textarea {
+        max-width: 400px;
+        width: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
     </style>
 </head>
 <body>
     <h1 class="site-brand"><a href="/">microblog</a></h1>
-    <a class="nav-item" href="/post">New Post</a>
+    {{ if .HeadControls }}
+    <a class="button" href="/post">New Post</a>
     {{ if .SignedIn }}
     <a class="nav-item" href="/auth/logout">Logout</a>
     {{ else }}
     <a class="nav-item" href="/auth/login">Login</a>
     <a class="nav-item" href="/auth/signup">Sign up</a>
+    {{ end }}
     {{ end }}
     <hr>
     {{ if .ErrorMessage }}

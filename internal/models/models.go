@@ -136,6 +136,25 @@ func (data *DataSource) GetUserByName(name string) (*User, error) {
 	return &user, nil
 }
 
+func (data *DataSource) DeleteUser(id uint) {
+	data.db.Delete(&Identity{}, "user_id = ?", id)
+	data.db.Delete(&Post{}, "user_id = ?", id)
+	data.db.Delete(&User{}, "id = ?", id)
+}
+
+func (data *DataSource) DeletePost(user, id uint) error {
+	var post Post
+	data.db.First(&post, id)
+	if post.ID != id {
+		return errors.New("post does not exist")
+	}
+	if post.UserID != user {
+		return errors.New("user not egligible for deletion")
+	}
+	data.db.Delete(&post)
+	return nil
+}
+
 var nameRegexp = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
 
 func (data *DataSource) ValidateName(name string) bool {
@@ -158,13 +177,14 @@ func (data *DataSource) ValidateEmail(email string) bool {
 }
 
 func (data *DataSource) GetPosts(id uint) ([]Post, error) {
-	var user User
-	data.db.First(&user, id)
-	if user.ID != id {
-		return nil, errors.New("user does not exist")
-	}
 	var posts []Post
-	data.db.Model(&user).Related(&posts)
+	data.db.Where("user_id = ?", id).Find(&posts)
+	return posts, nil
+}
+
+func (data *DataSource) GetPostsDesc(id uint) ([]Post, error) {
+	var posts []Post
+	data.db.Where("user_id = ?", id).Order("created_at DESC").Find(&posts)
 	return posts, nil
 }
 
