@@ -7,13 +7,19 @@
     </p>
     <p>
     <label for="content">Content</label>
-    <textarea name="content" placeholder="Content">{{ .Content }}</textarea>
+    <textarea name="content" placeholder="Content" rows="6">{{ .Content }}</textarea>
     </p>
     {{ if .ID }}
-    <input type="submit" value="Edit post" class="button">
+    <input type="submit" value="Update post" class="button">
     {{ else }}
     <input type="submit" value="Submit post" class="button">
     {{ end }}
 </form>
 {{ end }}
-{{ define "title" }}Submit post{{ end }}
+{{ define "title" }}
+{{ if .ID }}
+Update post
+{{ else }}
+Submit post
+{{ end }}
+{{ end }}
