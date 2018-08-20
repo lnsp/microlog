@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	postTitleMaxLength   = 80
-	postContentMaxLength = 80000
-	usernameMaxLength    = 24
-	biographyMaxLength   = 240
+	postTitleMaxLength    = 80
+	postContentMaxLength  = 80000
+	reportReasonMaxLength = 240
+	usernameMaxLength     = 24
+	biographyMaxLength    = 240
 )
 
 type User struct {
@@ -32,6 +33,13 @@ type Identity struct {
 	Hash      []byte
 	UserID    uint
 	Confirmed bool
+}
+
+type Report struct {
+	gorm.Model
+	PostID     uint
+	ReporterID uint
+	Reason     string
 }
 
 type Post struct {
@@ -105,6 +113,33 @@ func (data *DataSource) AddUser(name, email string, password []byte) error {
 		Identities: []Identity{id},
 	}
 	data.db.Create(&user)
+	return nil
+}
+
+func (data *DataSource) ValidateReportReason(reason string) bool {
+	return len(reason) <= reportReasonMaxLength
+}
+
+func (data *DataSource) AddReport(postID, reporterID uint, reason string) error {
+	if !data.ValidateReportReason(reason) {
+		return errors.New("reason is not valid")
+	}
+	var reporter User
+	data.db.First(&reporter, reporterID)
+	if reporter.ID != reporterID {
+		return errors.New("user does not exist")
+	}
+	var post Post
+	data.db.First(&post, postID)
+	if post.ID != postID {
+		return errors.New("post does not exist")
+	}
+	report := Report{
+		PostID:     postID,
+		ReporterID: reporterID,
+		Reason:     reason,
+	}
+	data.db.Create(&report)
 	return nil
 }
 
