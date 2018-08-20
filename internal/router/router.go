@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	timeFormat          = "Monday, 2. January"
 	sessionCookieName   = "session_token"
 	dashboardPostsLimit = 10
 	dashboardUsersLimit = 10
@@ -53,6 +54,7 @@ func New(secret string, data *models.DataSource) http.Handler {
 	serveMux.HandleFunc("/auth/signup", router.signupSubmit).Methods("POST")
 	serveMux.HandleFunc("/auth/logout", router.logout).Methods("GET")
 	serveMux.HandleFunc("/", router.dashboard).Methods("GET")
+	serveMux.HandleFunc("/profile", router.profileRedirect).Methods("GET")
 	serveMux.HandleFunc("/profile/edit", router.profileEdit).Methods("GET")
 	serveMux.HandleFunc("/profile/edit", router.profileEditSubmit).Methods("POST")
 	serveMux.HandleFunc("/profile/delete", router.profileDelete).Methods("GET")
@@ -62,7 +64,7 @@ func New(secret string, data *models.DataSource) http.Handler {
 	serveMux.HandleFunc("/legal/privacy-policy", router.privacyPolicy).Methods("GET")
 	serveMux.HandleFunc("/legal/terms-of-service", router.termsOfService).Methods("GET")
 	serveMux.HandleFunc("/{user}", router.profile).Methods("GET")
-	serveMux.HandleFunc("/{user}/{post}", router.redirectPost).Methods("GET")
+	serveMux.HandleFunc("/{user}/{post}", router.postRedirect).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/", router.post).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/edit", router.postEdit).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/delete", router.postDelete).Methods("GET")
@@ -95,7 +97,22 @@ type Router struct {
 	SessionSecret string
 }
 
-func (router *Router) redirectPost(w http.ResponseWriter, r *http.Request) {
+func (router *Router) profileRedirect(w http.ResponseWriter, r *http.Request) {
+	ctx := router.defaultContext(r)
+	if !ctx.SignedIn {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	user, err := router.Data.GetUser(ctx.UserID)
+	if err != nil {
+		log.Errorln("Failed to find user:", err)
+		http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, "/"+user.Name, http.StatusSeeOther)
+}
+
+func (router *Router) postRedirect(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	http.Redirect(w, r, fmt.Sprintf("/%s/%s/", vars["user"], vars["post"]), http.StatusPermanentRedirect)
 }
@@ -317,7 +334,7 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 		Context:     *ctx,
 		Name:        user.Name,
 		Biography:   user.Biography,
-		MemberSince: user.CreatedAt.Format(time.UnixDate),
+		MemberSince: user.CreatedAt.Format(timeFormat),
 		PostCount:   len(posts),
 		Self:        ctx.SignedIn && ctx.UserID == user.ID,
 		Posts:       make([]ProfilePost, len(posts)),
@@ -325,7 +342,7 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 	for i := range posts {
 		profileCtx.Posts[i] = ProfilePost{
 			Title:  posts[i].Title,
-			Date:   posts[i].CreatedAt.Format(time.UnixDate),
+			Date:   posts[i].CreatedAt.Format(timeFormat),
 			Author: user.Name,
 			ID:     posts[i].ID,
 		}
@@ -533,7 +550,7 @@ func (router *Router) postContextWithID(r *http.Request, username string, id uin
 		ID:      post.ID,
 		Title:   post.Title,
 		Content: post.Content,
-		Date:    post.CreatedAt.Format(time.UnixDate),
+		Date:    post.CreatedAt.Format(timeFormat),
 	}
 }
 
@@ -563,7 +580,7 @@ func (router *Router) postContext(r *http.Request) PostContext {
 		ID:      post.ID,
 		Title:   post.Title,
 		Content: post.Content,
-		Date:    post.CreatedAt.Format(time.UnixDate),
+		Date:    post.CreatedAt.Format(timeFormat),
 	}
 }
 
