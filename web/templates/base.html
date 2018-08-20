@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0">
-    <title>{{ template "title" . }} – microblog</title>
+    <title>{{ template "title" . }} – microlog</title>
     <style>
     a {
         text-decoration: none;
@@ -77,7 +77,7 @@
     </style>
 </head>
 <body>
-    <h1 class="site-brand"><a href="/">microblog</a></h1>
+    <h1 class="site-brand"><a href="/">microlog</a></h1>
     {{ if .HeadControls }}
     <a class="button" href="/post">New Post</a>
     {{ if .SignedIn }}
@@ -95,7 +95,7 @@
     {{ end }}
     {{ template "content" . }}
     <hr>
-    <footer>&copy; 2018 The microblog project. All rights reserved.
+    <footer>&copy; 2018 The microlog project. All rights reserved.
         | <a href="/legal/terms-of-service">Terms Of Service</a>
         | <a href="/legal/privacy-policy">Privacy Policy</a>
     </footer>

@@ -13,7 +13,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/lnsp/microblog/internal/models"
+	"github.com/lnsp/microlog/internal/models"
 )
 
 const (

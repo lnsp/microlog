@@ -28,9 +28,10 @@ type User struct {
 
 type Identity struct {
 	gorm.Model
-	Email  string
-	Hash   []byte
-	UserID uint
+	Email     string
+	Hash      []byte
+	UserID    uint
+	Confirmed bool
 }
 
 type Post struct {
@@ -95,8 +96,9 @@ func (data *DataSource) AddUser(name, email string, password []byte) error {
 		return errors.Wrap(err, "could not generate hash")
 	}
 	id := Identity{
-		Email: email,
-		Hash:  hash,
+		Email:     email,
+		Hash:      hash,
+		Confirmed: false,
 	}
 	user := User{
 		Name:       name,
