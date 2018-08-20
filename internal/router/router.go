@@ -557,31 +557,8 @@ func (router *Router) postContextWithID(r *http.Request, username string, id uin
 func (router *Router) postContext(r *http.Request) PostContext {
 	userName := mux.Vars(r)["user"]
 	postID := mux.Vars(r)["post"]
-
-	ctx := router.defaultContext(r)
 	id, _ := strconv.ParseUint(postID, 10, 64)
-	post, err := router.Data.GetPost(uint(id))
-	if err != nil {
-		ctx.ErrorMessage = "Post does not exist."
-	}
-	user, err := router.Data.GetUserByName(userName)
-	if err != nil {
-		ctx.ErrorMessage = "User does not exist."
-	}
-	if ctx.ErrorMessage != "" {
-		return PostContext{
-			Context: *ctx,
-		}
-	}
-	return PostContext{
-		Context: *ctx,
-		Self:    ctx.SignedIn && ctx.UserID == post.UserID,
-		Author:  user.Name,
-		ID:      post.ID,
-		Title:   post.Title,
-		Content: post.Content,
-		Date:    post.CreatedAt.Format(timeFormat),
-	}
+	return router.postContextWithID(r, userName, uint(id))
 }
 
 func (router *Router) post(w http.ResponseWriter, r *http.Request) {
