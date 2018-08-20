@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	timeFormat          = "Monday, 2. January"
+	timeFormat          = "Monday, 2. January at 15:04"
 	sessionCookieName   = "session_token"
 	dashboardPostsLimit = 10
 	dashboardUsersLimit = 10
