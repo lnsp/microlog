@@ -35,8 +35,9 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed to open data source:", err)
 	}
+	handler := router.New(spec.Session, datasource)
 	server := &http.Server{
-		Handler:           router.New(spec.Session, datasource),
+		Handler:           logger(handler),
 		Addr:              spec.Addr,
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
@@ -46,4 +47,12 @@ func main() {
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalln("Failed to listen:", err)
 	}
+}
+
+func logger(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t := time.Now()
+		h.ServeHTTP(w, r)
+		log.Debugf("%.3fms %s %s", time.Since(t).Seconds()*1000., r.Method, r.URL.Path)
+	})
 }
