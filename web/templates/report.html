@@ -1,0 +1,14 @@
+{{ define "content" }}
+<div class="post-header">
+    <p>{{ .Date }}</p>
+    <h3>{{ .Title }} <small>by <a href="/{{ .Author }}">{{ .Author }}</a></small></h3>
+</div>
+<form name="report" method="POST">
+    <p>
+        <label for="reason">Reason for report (abusive language, illegal content, etc.)</label>
+        <input type="text" name="reason" maxlength="240" placeholder="Reason">
+    </p>
+    <input type="submit" value="Send report" class="button">
+</form>
+{{ end }}
+{{ define "title" }}Report post{{ end }}
