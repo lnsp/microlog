@@ -81,6 +81,7 @@
     {{ if .HeadControls }}
     <a class="button" href="/post">New Post</a>
     {{ if .SignedIn }}
+    <a class="nav-item" href="/profile">Profile</a>
     <a class="nav-item" href="/auth/logout">Logout</a>
     {{ else }}
     <a class="nav-item" href="/auth/login">Login</a>
