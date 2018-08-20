@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
+
 	"github.com/dustin/go-humanize"
 
 	"github.com/Sirupsen/logrus"
@@ -40,6 +43,7 @@ var (
 	profileDeleteTemplate  = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/profileDelete.html"))
 	postTemplate           = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/post.html"))
 	postEditTemplate       = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/postEdit.html"))
+	reportTemplate         = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/report.html"))
 	notFoundTemplate       = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/notfound.html"))
 	termsOfServiceTemplate = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/legal/terms-of-service.html"))
 	privacyPolicyTemplate  = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/legal/privacy-policy.html"))
@@ -68,6 +72,8 @@ func New(secret string, data *models.DataSource) http.Handler {
 	serveMux.HandleFunc("/{user}/{post}/", router.post).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/edit", router.postEdit).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/delete", router.postDelete).Methods("GET")
+	serveMux.HandleFunc("/{user}/{post}/report", router.report).Methods("GET")
+	serveMux.HandleFunc("/{user}/{post}/report", router.reportSubmit).Methods("POST")
 	return serveMux
 }
 
@@ -435,12 +441,13 @@ func (router *Router) postDelete(w http.ResponseWriter, r *http.Request) {
 
 type PostContext struct {
 	Context
-	ID      uint
-	Author  string
-	Title   string
-	Content string
-	Date    string
-	Self    bool
+	ID          uint
+	Author      string
+	Title       string
+	Content     string
+	HTMLContent template.HTML
+	Date        string
+	Self        bool
 }
 
 func (router *Router) postNew(w http.ResponseWriter, r *http.Request) {
@@ -543,14 +550,17 @@ func (router *Router) postContextWithID(r *http.Request, username string, id uin
 			Context: *ctx,
 		}
 	}
+	rendered := blackfriday.MarkdownCommon([]byte(post.Content))
+	safe := bluemonday.UGCPolicy().SanitizeBytes(rendered)
 	return PostContext{
-		Context: *ctx,
-		Self:    ctx.SignedIn && ctx.UserID == post.UserID,
-		Author:  user.Name,
-		ID:      post.ID,
-		Title:   post.Title,
-		Content: post.Content,
-		Date:    post.CreatedAt.Format(timeFormat),
+		Context:     *ctx,
+		Self:        ctx.SignedIn && ctx.UserID == post.UserID,
+		Author:      user.Name,
+		ID:          post.ID,
+		Title:       post.Title,
+		Content:     post.Content,
+		HTMLContent: template.HTML(safe),
+		Date:        post.CreatedAt.Format(timeFormat),
 	}
 }
 
@@ -577,5 +587,44 @@ func (router *Router) termsOfService(w http.ResponseWriter, r *http.Request) {
 func (router *Router) privacyPolicy(w http.ResponseWriter, r *http.Request) {
 	if err := privacyPolicyTemplate.Execute(w, router.defaultContext(r)); err != nil {
 		log.Errorln("Failed to render privacy policy:", err)
+	}
+}
+
+func (router *Router) report(w http.ResponseWriter, r *http.Request) {
+	ctx := router.postContext(r)
+	if !ctx.SignedIn {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	if err := reportTemplate.Execute(w, ctx); err != nil {
+		log.Errorln("Failed to render report:", err)
+	}
+}
+
+func (router *Router) reportSubmit(w http.ResponseWriter, r *http.Request) {
+	ctx := router.postContext(r)
+	if !ctx.SignedIn {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	reason := r.FormValue("reason")
+	if !router.Data.ValidateReportReason(reason) {
+		ctx.ErrorMessage = "The reasoning must be at max 240 characters."
+		if err := reportTemplate.Execute(w, ctx); err != nil {
+			log.Errorln("Failed to render report:", err)
+		}
+		return
+	}
+	if err := router.Data.AddReport(ctx.ID, ctx.UserID, reason); err != nil {
+		ctx.ErrorMessage = "Unexpected internal error, please try again."
+		if err := reportTemplate.Execute(w, ctx); err != nil {
+			log.Errorln("Failed to render report:", err)
+		}
+		return
+	}
+	log.Debugf("User %d reported post %d", ctx.UserID, ctx.ID)
+	ctx.ErrorMessage = "Thank you for the report. Our team will look into the issue!"
+	if err := postTemplate.Execute(w, ctx); err != nil {
+		log.Errorln("Failed to render post:", err)
 	}
 }

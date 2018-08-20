@@ -17,7 +17,7 @@
     {{ range .Posts }}
     <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a><br><small>on {{ .Date }}</small></li>
     {{ else }}
-    This user has not written any posts yet.
+    This user has not published any posts yet.
     {{ end }}
 </ul>
 {{ end }}

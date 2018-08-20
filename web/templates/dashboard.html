@@ -3,7 +3,7 @@
 <h2>Latest posts</h2>
 <ul class="item-listing">
     {{ range .LatestPosts }}
-    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> by <a href="/{{ .Author }}">{{ .Author }}</a> {{ .Date }}</li>
+    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> by <a href="/{{ .Author }}">{{ .Author }}</a><br><small>{{ .Date }}</small></li>
     {{ end }}
 </ul>
 </div>
