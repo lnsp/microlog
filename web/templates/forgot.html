@@ -1,0 +1,24 @@
+{{ define "content" }}
+{{ if .Success }}
+<p>
+    An email with instructions on how to reset your password has been sent to your account.
+</p>
+{{ else }}
+<form name="forgot" action="/auth/forgot" method="POST">
+    <p>
+        <label for="email">Email</label>
+        <input type="email" name="email" placeholder="Email">
+    </p>
+    <p>
+        <input type="submit" value="Reset password" class="button">
+    </p>
+</form>
+{{ end }}
+{{ end }}
+{{ define "title" }}
+{{ if .Success }}
+Reset in progress
+{{ else }}
+Reset password
+{{ end }}
+{{ end }}

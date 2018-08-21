@@ -20,9 +20,11 @@ var log = &logrus.Logger{
 }
 
 type specification struct {
+	PublicAddr string `default:"localhost:8080" desc:"Public address the server is reachable on"`
 	Addr       string `default:":8080" desc:"Address the server is listening on"`
 	Datasource string `required:"true" desc:"Database file name"`
-	Session    string `default:"secret" desc:"Shared session secret"`
+	Session    string `default:"secret" desc:"Shared session token secret"`
+	Email      string `default:"secret" desc:"Shared email token secret"`
 }
 
 func main() {
@@ -31,11 +33,16 @@ func main() {
 		envconfig.Usage("micro", spec)
 		return
 	}
-	datasource, err := models.Open(spec.Datasource)
+	dataSource, err := models.Open(spec.Datasource)
 	if err != nil {
 		log.Fatalln("Failed to open data source:", err)
 	}
-	handler := router.New(spec.Session, datasource)
+	handler := router.New(router.Config{
+		SessionSecret: []byte(spec.Session),
+		EmailSecret:   []byte(spec.Email),
+		DataSource:    dataSource,
+		PublicAddress: spec.PublicAddr,
+	})
 	server := &http.Server{
 		Handler:           logger(handler),
 		Addr:              spec.Addr,

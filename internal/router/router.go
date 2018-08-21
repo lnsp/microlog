@@ -14,12 +14,15 @@ import (
 	"github.com/dustin/go-humanize"
 
 	"github.com/Sirupsen/logrus"
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/lnsp/microlog/internal/email"
 	"github.com/lnsp/microlog/internal/models"
+	"github.com/lnsp/microlog/internal/tokens"
 )
 
 const (
+	confirmURLFormat    = "/auth/confirm?token=%s"
+	resetURLFormat      = "/auth/reset?token=%s"
 	timeFormat          = "Monday, 2. January at 15:04"
 	sessionCookieName   = "session_token"
 	dashboardPostsLimit = 10
@@ -45,18 +48,39 @@ var (
 	postEditTemplate       = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/postEdit.html"))
 	reportTemplate         = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/report.html"))
 	notFoundTemplate       = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/notfound.html"))
+	confirmTemplate        = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/confirm.html"))
+	resetTemplate          = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/reset.html"))
+	forgotTemplate         = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/forgot.html"))
 	termsOfServiceTemplate = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/legal/terms-of-service.html"))
 	privacyPolicyTemplate  = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/legal/privacy-policy.html"))
 )
 
-func New(secret string, data *models.DataSource) http.Handler {
-	router := &Router{Data: data, SessionSecret: secret}
+type Config struct {
+	SessionSecret []byte
+	EmailSecret   []byte
+	DataSource    *models.DataSource
+	PublicAddress string
+}
+
+func New(cfg Config) http.Handler {
+	router := &Router{
+		Data:          cfg.DataSource,
+		SessionSecret: cfg.SessionSecret,
+		Email:         email.NewClient(cfg.DataSource, cfg.EmailSecret),
+		PublicAddress: cfg.PublicAddress,
+	}
 	serveMux := mux.NewRouter()
+	serveMux.HandleFunc("/favicon.ico", router.favicon).Methods("GET")
 	serveMux.HandleFunc("/auth/login", router.login).Methods("GET")
 	serveMux.HandleFunc("/auth/login", router.loginSubmit).Methods("POST")
+	serveMux.HandleFunc("/auth/forgot", router.forgot).Methods("GET")
+	serveMux.HandleFunc("/auth/forgot", router.forgotSubmit).Methods("POST")
 	serveMux.HandleFunc("/auth/signup", router.signup).Methods("GET")
 	serveMux.HandleFunc("/auth/signup", router.signupSubmit).Methods("POST")
 	serveMux.HandleFunc("/auth/logout", router.logout).Methods("GET")
+	serveMux.HandleFunc("/auth/confirm", router.confirm).Methods("GET")
+	serveMux.HandleFunc("/auth/reset", router.reset).Methods("GET")
+	serveMux.HandleFunc("/auth/reset", router.resetSubmit).Methods("POST")
 	serveMux.HandleFunc("/", router.dashboard).Methods("GET")
 	serveMux.HandleFunc("/profile", router.profileRedirect).Methods("GET")
 	serveMux.HandleFunc("/profile/edit", router.profileEdit).Methods("GET")
@@ -99,8 +123,16 @@ type DashboardContext struct {
 }
 
 type Router struct {
+	Email         *email.Client
 	Data          *models.DataSource
-	SessionSecret string
+	SessionSecret []byte
+	PublicAddress string
+}
+
+func mustRender(tmp *template.Template, w http.ResponseWriter, ctx interface{}) {
+	if err := tmp.Execute(w, ctx); err != nil {
+		log.Errorf("failed to render template %s: %v", tmp.Name(), err)
+	}
 }
 
 func (router *Router) profileRedirect(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +148,10 @@ func (router *Router) profileRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/"+user.Name, http.StatusSeeOther)
+}
+
+func (router *Router) favicon(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./web/static/img/microlog.png")
 }
 
 func (router *Router) postRedirect(w http.ResponseWriter, r *http.Request) {
@@ -141,10 +177,8 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 			HeadControls: true,
 		}
 	}
-	claims := tokenClaims{}
-	if _, err := jwt.ParseWithClaims(sessionCookie.Value, &claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(router.SessionSecret), nil
-	}); err != nil {
+	_, uid, ok := tokens.VerifySessionToken(router.SessionSecret, sessionCookie.Value)
+	if !ok {
 		log.Errorln("Received invalid token:", err)
 		return &Context{
 			SignedIn:     false,
@@ -153,21 +187,117 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 	}
 	return &Context{
 		SignedIn:     true,
-		UserID:       claims.ID,
+		UserID:       uid,
 		HeadControls: true,
 	}
+}
+
+type EmailContext struct {
+	Context
+	Success bool
+}
+
+func (router *Router) confirm(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query()["token"][0]
+	email, userID, ok := tokens.VerifyEmailToken(router.SessionSecret, token, tokens.PurposeConfirmation)
+	ctx := EmailContext{
+		Context: *router.defaultContext(r),
+		Success: false,
+	}
+	if !ok {
+		mustRender(confirmTemplate, w, ctx)
+		return
+	}
+	if err := router.Data.ConfirmIdentity(userID, email); err != nil {
+		log.Errorln("Failed to confirm identity:", err)
+		mustRender(confirmTemplate, w, ctx)
+		return
+	}
+	ctx.Success = true
+	mustRender(confirmTemplate, w, ctx)
+}
+
+func (router *Router) forgot(w http.ResponseWriter, r *http.Request) {
+	ctx := EmailContext{
+		Context: *router.defaultContext(r),
+		Success: false,
+	}
+	mustRender(forgotTemplate, w, ctx)
+}
+
+func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
+	ctx := EmailContext{
+		Context: *router.defaultContext(r),
+		Success: true,
+	}
+	email := r.FormValue("email")
+	id, err := router.Data.GetIdentityByEmail(email)
+	if err == nil {
+		if err := router.Email.SendPasswordReset(id.UserID, email, router.PublicAddress+resetURLFormat); err != nil {
+			log.Errorln("Failed to send reset email:", err)
+			ctx.Success = false
+			ctx.ErrorMessage = "Unexpected internal error, please try again."
+		}
+	}
+	mustRender(forgotTemplate, w, ctx)
+}
+
+func (router *Router) reset(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query()["token"][0]
+	_, _, ok := tokens.VerifyEmailToken(router.SessionSecret, token, tokens.PurposeReset)
+	ctx := EmailContext{
+		Context: *router.defaultContext(r),
+		Success: false,
+	}
+	if !ok {
+		mustRender(resetTemplate, w, ctx)
+		return
+	}
+	ctx.Success = true
+	mustRender(resetTemplate, w, ctx)
+}
+
+func (router *Router) resetSubmit(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query()["token"][0]
+	email, userID, ok := tokens.VerifyEmailToken(router.SessionSecret, token, tokens.PurposeReset)
+	ctx := EmailContext{
+		Context: *router.defaultContext(r),
+		Success: false,
+	}
+	if !ok {
+		mustRender(resetTemplate, w, ctx)
+		return
+	}
+	ctx.Success = true
+	var (
+		password        = r.FormValue("password")
+		passwordConfirm = r.FormValue("password_confirm")
+	)
+	if password != passwordConfirm {
+		ctx.ErrorMessage = "Passwords do not match."
+		mustRender(resetTemplate, w, ctx)
+		return
+	}
+	if !router.Data.ValidatePassword(password) {
+		ctx.ErrorMessage = "Password must be at min 8 characters long."
+		mustRender(resetTemplate, w, ctx)
+		return
+	}
+	if err := router.Data.ResetPassword(userID, email, []byte(password)); err != nil {
+		log.Errorln("Failed to reset password:", err)
+		ctx.ErrorMessage = "Unexpected internal error, please try again."
+		mustRender(resetTemplate, w, ctx)
+		return
+	}
+	ctx.ErrorMessage = "You can now log in with your new password."
+	ctx.HeadControls = false
+	mustRender(loginTemplate, w, ctx)
 }
 
 func (router *Router) login(w http.ResponseWriter, r *http.Request) {
 	ctx := router.defaultContext(r)
 	ctx.HeadControls = false
-	loginTemplate.Execute(w, ctx)
-}
-
-type tokenClaims struct {
-	jwt.StandardClaims
-	Username string
-	ID       uint
+	mustRender(loginTemplate, w, ctx)
 }
 
 func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
@@ -175,27 +305,40 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 		email    = r.FormValue("email")
 		password = r.FormValue("password")
 	)
-	id, err := router.Data.HasUser(email, []byte(password))
+	id, confirmed, err := router.Data.HasUser(email, []byte(password))
 	if err != nil {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "User identity does not exist."
-		loginTemplate.Execute(w, ctx)
+		mustRender(loginTemplate, w, ctx)
 		return
 	}
-	claims := tokenClaims{
-		ID: id,
+	if !confirmed {
+		ctx := router.defaultContext(r)
+		ctx.ErrorMessage = "User identity is not confirmed."
+		mustRender(loginTemplate, w, ctx)
+		return
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
-	tokenString, err := token.SignedString([]byte(router.SessionSecret))
+	user, err := router.Data.GetUser(id)
+	if err != nil {
+		ctx := router.defaultContext(r)
+		ctx.ErrorMessage = "Unexpected internal error, please try again."
+		mustRender(loginTemplate, w, ctx)
+		return
+	}
+	token, err := tokens.CreateSessionToken(router.SessionSecret, user.Name, user.ID)
 	if err != nil {
 		log.Errorln("Could not sign token", err)
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "Unexpected internal error, please try again."
-		loginTemplate.Execute(w, ctx)
+		mustRender(loginTemplate, w, ctx)
 		return
 	}
-	expiresAt := time.Now().Add(time.Hour)
-	cookie := http.Cookie{Path: "/", Name: sessionCookieName, Value: tokenString, Expires: expiresAt}
+	cookie := http.Cookie{
+		Path:    "/",
+		Name:    sessionCookieName,
+		Value:   token,
+		Expires: time.Now().Add(time.Hour),
+	}
 	http.SetCookie(w, &cookie)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -293,11 +436,19 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := router.Data.AddUser(name, email, []byte(password)); err != nil {
-		ctx.ErrorMessage = "Unknown error occured, please try again"
+	userID, err := router.Data.AddUser(name, email, []byte(password))
+	if err != nil {
+		ctx.ErrorMessage = "Internal error occured, please try again."
 		signupTemplate.Execute(w, ctx)
 		return
 	}
+
+	if err := router.Email.SendConfirmation(userID, email, router.PublicAddress+confirmURLFormat); err != nil {
+		ctx.ErrorMessage = "Internal error occured, please try again."
+		signupTemplate.Execute(w, ctx)
+		return
+	}
+
 	log.Debugln("User", name, "just signed up")
 	if err := signupSuccessTemplate.Execute(w, ctx); err != nil {
 		log.Errorln("Failed to render signup success:", err)

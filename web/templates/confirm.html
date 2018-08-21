@@ -1,0 +1,18 @@
+{{ define "content" }}
+{{ if .Success }}
+<p>
+    Congratulations, you are now a part of the microlog community. Access your profile using the Login button above and explore the site.
+</p>
+{{ else }}
+<p>
+    Sorry, but it seems like your token is invalid or your account is already confirmed. Maybe try logging in?
+</p>
+{{ end }}
+{{ end }}
+{{ define "title" }}
+{{ if .Success }}
+Confirmed!
+{{ else }}
+Error
+{{ end }}
+{{ end }}

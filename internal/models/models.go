@@ -71,16 +71,31 @@ func Open(path string) (*DataSource, error) {
 	return &DataSource{db}, nil
 }
 
-func (data *DataSource) HasUser(email string, password []byte) (uint, error) {
+func (data *DataSource) ResetPassword(user uint, email string, password []byte) error {
+	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		return errors.Wrap(err, "could not generate hash")
+	}
+	var identity Identity
+	data.db.Where("user_id = ? AND email = ?", user, email).First(&identity)
+	if identity.UserID != user {
+		return errors.New("failed to find identity")
+	}
+	identity.Hash = hash
+	data.db.Save(&identity)
+	return nil
+}
+
+func (data *DataSource) HasUser(email string, password []byte) (uint, bool, error) {
 	var id Identity
 	data.db.Where("email = ?", email).First(&id)
 	if id.Email != email {
-		return 0, errors.New("email does not exist")
+		return 0, false, errors.New("email does not exist")
 	}
 	if err := bcrypt.CompareHashAndPassword(id.Hash, password); err != nil {
-		return 0, errors.New("passwords do not match")
+		return 0, false, errors.New("passwords do not match")
 	}
-	return id.UserID, nil
+	return id.UserID, id.Confirmed, nil
 }
 
 func (data *DataSource) UpdatePost(userID, postID uint, title, content string) error {
@@ -98,10 +113,10 @@ func (data *DataSource) UpdatePost(userID, postID uint, title, content string) e
 	return nil
 }
 
-func (data *DataSource) AddUser(name, email string, password []byte) error {
+func (data *DataSource) AddUser(name, email string, password []byte) (uint, error) {
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
-		return errors.Wrap(err, "could not generate hash")
+		return 0, errors.Wrap(err, "could not generate hash")
 	}
 	id := Identity{
 		Email:     email,
@@ -113,7 +128,7 @@ func (data *DataSource) AddUser(name, email string, password []byte) error {
 		Identities: []Identity{id},
 	}
 	data.db.Create(&user)
-	return nil
+	return user.ID, nil
 }
 
 func (data *DataSource) ValidateReportReason(reason string) bool {
@@ -283,4 +298,36 @@ func (data *DataSource) GetPost(id uint) (*Post, error) {
 		return nil, errors.New("could not find post")
 	}
 	return &post, nil
+}
+
+func (data *DataSource) GetIdentity(user uint, email string) (*Identity, error) {
+	var identity Identity
+	data.db.Where("user_id = ? AND email = ?", user, email).First(&identity)
+	if identity.UserID != user {
+		return nil, errors.New("could not find identity")
+	}
+	return &identity, nil
+}
+
+func (data *DataSource) GetIdentityByEmail(email string) (*Identity, error) {
+	var identity Identity
+	data.db.Where("email = ?", email).First(&identity)
+	if identity.Email != email {
+		return nil, errors.New("could not find identity")
+	}
+	return &identity, nil
+}
+
+func (data *DataSource) ConfirmIdentity(user uint, email string) error {
+	var identity Identity
+	data.db.Where("user_id = ? AND email = ?", user, email).First(&identity)
+	if identity.UserID != user {
+		return errors.New("could not find identity")
+	}
+	if identity.Confirmed {
+		return errors.New("identity already confirmed")
+	}
+	identity.Confirmed = true
+	data.db.Save(&identity)
+	return nil
 }

@@ -1,0 +1,22 @@
+{{ define "content" }}
+{{ if .Success }}
+<form name="reset" method="POST">
+    <p>
+        <label for="password">Password</label>
+        <input type="password" name="password" placeholder="Password">
+    </p>
+    <p>
+        <label for="password_confirm">Password (again)</label>
+        <input type="password" name="password_confirm" placeholder="Password (again)">
+        <br>
+        <small>Your password should have at least 8 characters.</small>
+    </p>
+    <p>
+        <input type="submit" value="Reset password" class="button">
+    </p>
+</form>
+{{ else }}
+<p>Sorry, but it seems that your token is not valid anymore.</p>
+{{ end }}
+{{ end }}
+{{ define "title" }}Reset password{{ end }}
