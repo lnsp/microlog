@@ -19,6 +19,14 @@ const (
 	biographyMaxLength    = 240
 )
 
+var (
+	errPostNotFound     = errors.New("post does not exist")
+	errUserNotFound     = errors.New("user does not exist")
+	errIdentityNotFound = errors.New("identity does not exist")
+	errPostNotOwned     = errors.New("can not edit alien post")
+	errValidation       = errors.New("can not validate params")
+)
+
 type User struct {
 	gorm.Model
 	Name       string
@@ -71,6 +79,8 @@ func Open(path string) (*DataSource, error) {
 	return &DataSource{db}, nil
 }
 
+// ResetPassword sets the password of the related identity.
+// It returns an error if the action was unsuccessful.
 func (data *DataSource) ResetPassword(user uint, email string, password []byte) error {
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
@@ -79,33 +89,38 @@ func (data *DataSource) ResetPassword(user uint, email string, password []byte) 
 	var identity Identity
 	data.db.Where("user_id = ? AND email = ?", user, email).First(&identity)
 	if identity.UserID != user {
-		return errors.New("failed to find identity")
+		return errIdentityNotFound
 	}
 	identity.Hash = hash
 	data.db.Save(&identity)
 	return nil
 }
 
+// HasUser checks if the user identified by the given email and password exists.
+// It returns the user ID, the confirmation state of the user's identity and error value.
 func (data *DataSource) HasUser(email string, password []byte) (uint, bool, error) {
 	var id Identity
 	data.db.Where("email = ?", email).First(&id)
 	if id.Email != email {
-		return 0, false, errors.New("email does not exist")
+		return 0, false, errIdentityNotFound
 	}
 	if err := bcrypt.CompareHashAndPassword(id.Hash, password); err != nil {
-		return 0, false, errors.New("passwords do not match")
+		return 0, false, errIdentityNotFound
 	}
 	return id.UserID, id.Confirmed, nil
 }
 
+// UpdatePost updates the title and content of a specific post.
+// This action can only be applied to posts owned by the given user ID.
+// It returns any error if the action is unsuccessful.
 func (data *DataSource) UpdatePost(userID, postID uint, title, content string) error {
 	var post Post
 	data.db.First(&post, postID)
 	if post.ID != postID {
-		return errors.New("post does not exist")
+		return errPostNotFound
 	}
 	if post.UserID != userID {
-		return errors.New("post not owned by user")
+		return errPostNotOwned
 	}
 	post.Title = title
 	post.Content = content
@@ -113,7 +128,12 @@ func (data *DataSource) UpdatePost(userID, postID uint, title, content string) e
 	return nil
 }
 
+// AddUser creates a new user with a new default identity.
+// It returns the user ID and an error if the action is unsuccessful.
 func (data *DataSource) AddUser(name, email string, password []byte) (uint, error) {
+	if !data.ValidateName(name) || !data.ValidateEmail(email) || !data.ValidatePassword(string(password)) {
+		return 0, errValidation
+	}
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
 		return 0, errors.Wrap(err, "could not generate hash")
@@ -131,10 +151,14 @@ func (data *DataSource) AddUser(name, email string, password []byte) (uint, erro
 	return user.ID, nil
 }
 
+// ValidateReportReason checks if the given reason string satisfies the conditions for report reasons.
+// It returns true if the report reason is valid.
 func (data *DataSource) ValidateReportReason(reason string) bool {
 	return len(reason) <= reportReasonMaxLength
 }
 
+// AddReport creates a new report of the given post with a specific reason.
+// It returns an error if the report is unsuccessful.
 func (data *DataSource) AddReport(postID, reporterID uint, reason string) error {
 	if !data.ValidateReportReason(reason) {
 		return errors.New("reason is not valid")
@@ -158,18 +182,22 @@ func (data *DataSource) AddReport(postID, reporterID uint, reason string) error 
 	return nil
 }
 
+// EmailExists checks if the email already is used by anotherr identity.
 func (data *DataSource) EmailExists(email string) bool {
 	var count int
 	data.db.Model(&Identity{}).Where("email = ?", email).Count(&count)
 	return count > 0
 }
 
+// NameExists checks if the name already is used by another user.
 func (data *DataSource) NameExists(name string) bool {
 	var count int
 	data.db.Model(&User{}).Where("name = ?", name).Count(&count)
 	return count > 0
 }
 
+// GetUser retrieves the user with the specified ID.
+// It returns a reference to the user instance and an error if unsuccessful.
 func (data *DataSource) GetUser(id uint) (*User, error) {
 	var user User
 	data.db.First(&user, id)
@@ -179,6 +207,8 @@ func (data *DataSource) GetUser(id uint) (*User, error) {
 	return &user, nil
 }
 
+// GetUserByName returns the user identified by the given username.
+// It returns a reference to the user instance and an error if unsuccessful.
 func (data *DataSource) GetUserByName(name string) (*User, error) {
 	var user User
 	data.db.Where("name = ?", name).First(&user)
@@ -188,33 +218,40 @@ func (data *DataSource) GetUserByName(name string) (*User, error) {
 	return &user, nil
 }
 
+// DeleteUser deletes a user from the database.
 func (data *DataSource) DeleteUser(id uint) {
 	data.db.Delete(&Identity{}, "user_id = ?", id)
 	data.db.Delete(&Post{}, "user_id = ?", id)
 	data.db.Delete(&User{}, "id = ?", id)
 }
 
+// DeletePost deletes a specific post.
 func (data *DataSource) DeletePost(user, id uint) error {
 	var post Post
 	data.db.First(&post, id)
 	if post.ID != id {
-		return errors.New("post does not exist")
+		return errPostNotFound
 	}
 	if post.UserID != user {
-		return errors.New("user not egligible for deletion")
+		return errPostNotOwned
 	}
 	data.db.Delete(&post)
 	return nil
 }
 
-var nameRegexp = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+const (
+	namePattern       = `^[a-zA-Z0-9]+$`
+	passwordMinLength = 8
+)
 
+var nameRegexp = regexp.MustCompile(namePattern)
+
+// ValidateName checks if the name satifies the alphanumeric characters-only and length condition.
 func (data *DataSource) ValidateName(name string) bool {
 	return nameRegexp.Match([]byte(name)) && len(name) <= usernameMaxLength
 }
 
-const passwordMinLength = 8
-
+// ValidatPassword checks if the password is longer than the given minimum length.
 func (data *DataSource) ValidatePassword(password string) bool {
 	return len(password) >= passwordMinLength
 }
