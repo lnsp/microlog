@@ -57,6 +57,7 @@ func New(cfg Config) http.Handler {
 	router := &Router{
 		Data:          cfg.DataSource,
 		SessionSecret: cfg.SessionSecret,
+		EmailSecret:   cfg.EmailSecret,
 		Email:         email.NewClient(cfg.DataSource, cfg.EmailSecret),
 		PublicAddress: cfg.PublicAddress,
 	}
@@ -103,6 +104,7 @@ type Router struct {
 	Email         *email.Client
 	Data          *models.DataSource
 	SessionSecret []byte
+	EmailSecret   []byte
 	PublicAddress string
 }
 

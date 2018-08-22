@@ -37,7 +37,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 
 func (router *Router) confirm(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	email, userID, ok := tokens.VerifyEmailToken(router.SessionSecret, token, tokens.PurposeConfirmation)
+	email, userID, ok := tokens.VerifyEmailToken(router.EmailSecret, token, tokens.PurposeConfirmation)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
@@ -82,7 +82,7 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) reset(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	_, _, ok := tokens.VerifyEmailToken(router.SessionSecret, token, tokens.PurposeReset)
+	_, _, ok := tokens.VerifyEmailToken(router.EmailSecret, token, tokens.PurposeReset)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
@@ -97,7 +97,7 @@ func (router *Router) reset(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) resetSubmit(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	email, userID, ok := tokens.VerifyEmailToken(router.SessionSecret, token, tokens.PurposeReset)
+	email, userID, ok := tokens.VerifyEmailToken(router.EmailSecret, token, tokens.PurposeReset)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
