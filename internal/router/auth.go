@@ -70,7 +70,7 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.FormValue("email")
 	id, err := router.Data.GetIdentityByEmail(email)
-	if err == nil {
+	if err == nil && id.Confirmed {
 		if err := router.Email.SendPasswordReset(id.UserID, email, router.PublicAddress+resetURLFormat); err != nil {
 			log.Errorln("Failed to send reset email:", err)
 			ctx.Success = false
