@@ -1,3 +1,4 @@
+// Package models contains all code related to data models.
 package models
 
 import (
@@ -30,6 +31,7 @@ var (
 	errValidation               = errors.New("can not validate params")
 )
 
+// User stores the name, biography, posts and identities of a user.
 type User struct {
 	gorm.Model
 	Name       string
@@ -38,6 +40,7 @@ type User struct {
 	Identities []Identity `gorm:"foreignkey:UserID"`
 }
 
+// Identity stores the email, password hash and user.
 type Identity struct {
 	gorm.Model
 	Email     string
@@ -46,6 +49,7 @@ type Identity struct {
 	Confirmed bool
 }
 
+// Report stores the post, report author and reason for report.
 type Report struct {
 	gorm.Model
 	PostID     uint
@@ -53,6 +57,7 @@ type Report struct {
 	Reason     string
 }
 
+// Post stores the title, content and author of a post.
 type Post struct {
 	gorm.Model
 	Title   string
@@ -60,6 +65,7 @@ type Post struct {
 	UserID  uint
 }
 
+// DataSource is a generic source of data.
 type DataSource struct {
 	db *gorm.DB
 }
@@ -71,6 +77,7 @@ var log = &logrus.Logger{
 	Level:     logrus.DebugLevel,
 }
 
+// Open instantiates a new data source with the given file as a backend.
 func Open(path string) (*DataSource, error) {
 	log.Infoln("Opening sqlite3 database", path)
 	db, err := gorm.Open("sqlite3", path)
