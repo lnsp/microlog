@@ -480,12 +480,13 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 		router.renderNotFound(w, r, "profile")
 		return
 	}
-	posts, err := router.Data.GetPostsDesc(user.ID)
+	posts, err := router.Data.GetPostsByUser(user.ID)
 	if err != nil {
 		log.Errorln("Failed to get posts for user", user.ID)
 		router.renderNotFound(w, r, "profile")
 		return
 	}
+	// TODO: Sort by specific topic order (date etc.)
 	ctx := router.defaultContext(r)
 	profileCtx := ProfileContext{
 		Context:     *ctx,

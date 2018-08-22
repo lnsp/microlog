@@ -6,9 +6,11 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+
+	// need sqlite3 context for gorm
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -20,11 +22,12 @@ const (
 )
 
 var (
-	errPostNotFound     = errors.New("post does not exist")
-	errUserNotFound     = errors.New("user does not exist")
-	errIdentityNotFound = errors.New("identity does not exist")
-	errPostNotOwned     = errors.New("can not edit alien post")
-	errValidation       = errors.New("can not validate params")
+	errPostNotFound             = errors.New("could not find post")
+	errUserNotFound             = errors.New("could not find user")
+	errIdentityNotFound         = errors.New("could not find identity")
+	errIdentityAlreadyConfirmed = errors.New("identity is already confirmed")
+	errPostNotOwned             = errors.New("can not edit alien post")
+	errValidation               = errors.New("can not validate params")
 )
 
 type User struct {
@@ -161,17 +164,17 @@ func (data *DataSource) ValidateReportReason(reason string) bool {
 // It returns an error if the report is unsuccessful.
 func (data *DataSource) AddReport(postID, reporterID uint, reason string) error {
 	if !data.ValidateReportReason(reason) {
-		return errors.New("reason is not valid")
+		return errValidation
 	}
 	var reporter User
 	data.db.First(&reporter, reporterID)
 	if reporter.ID != reporterID {
-		return errors.New("user does not exist")
+		return errUserNotFound
 	}
 	var post Post
 	data.db.First(&post, postID)
 	if post.ID != postID {
-		return errors.New("post does not exist")
+		return errPostNotFound
 	}
 	report := Report{
 		PostID:     postID,
@@ -202,7 +205,7 @@ func (data *DataSource) GetUser(id uint) (*User, error) {
 	var user User
 	data.db.First(&user, id)
 	if user.ID != id {
-		return nil, errors.New("user does not exist")
+		return nil, errUserNotFound
 	}
 	return &user, nil
 }
@@ -213,7 +216,7 @@ func (data *DataSource) GetUserByName(name string) (*User, error) {
 	var user User
 	data.db.Where("name = ?", name).First(&user)
 	if user.Name != name {
-		return nil, errors.New("user does not exist")
+		return nil, errUserNotFound
 	}
 	return &user, nil
 }
@@ -251,11 +254,12 @@ func (data *DataSource) ValidateName(name string) bool {
 	return nameRegexp.Match([]byte(name)) && len(name) <= usernameMaxLength
 }
 
-// ValidatPassword checks if the password is longer than the given minimum length.
+// ValidatePassword checks if the password is longer than the given minimum length.
 func (data *DataSource) ValidatePassword(password string) bool {
 	return len(password) >= passwordMinLength
 }
 
+// ValidateEmail checks if the given address may be a real email.
 func (data *DataSource) ValidateEmail(email string) bool {
 	for _, c := range email {
 		if c == '@' {
@@ -265,59 +269,68 @@ func (data *DataSource) ValidateEmail(email string) bool {
 	return false
 }
 
-func (data *DataSource) GetPosts(id uint) ([]Post, error) {
+// GetPostsByUser retrieves the posts by the given user.
+// It returns the slice of posts and an error if something unexpected occurs.
+func (data *DataSource) GetPostsByUser(user uint) ([]Post, error) {
 	var posts []Post
-	data.db.Where("user_id = ?", id).Find(&posts)
+	data.db.Where("user_id = ?", user).Find(&posts)
 	return posts, nil
 }
 
-func (data *DataSource) GetPostsDesc(id uint) ([]Post, error) {
-	var posts []Post
-	data.db.Where("user_id = ?", id).Order("created_at DESC").Find(&posts)
-	return posts, nil
-}
-
+// GetRecentPosts fetches the most recent posts.
+// It takes the maximum number of posts to fetch as a parameter.
+// It returns the slice of posts sorted and an error if something unexpected occurs.
 func (data *DataSource) GetRecentPosts(count int) ([]Post, error) {
 	var posts []Post
 	data.db.Order("created_at DESC").Limit(count).Find(&posts)
 	return posts, nil
 }
 
+// GetRecentUsers fetches the most recent users.
+// It takes the maximum number of users to fetch as a parameter.
+// It returns the slice of users in descending order and an error if something unexpected occurs.
 func (data *DataSource) GetRecentUsers(count int) ([]User, error) {
 	var users []User
 	data.db.Order("created_at DESC").Limit(count).Find(&users)
 	return users, nil
 }
 
+// SetBiography changes the biography of the given user.
+// It returns an error if the biography is not valid or the user does not exist.
 func (data *DataSource) SetBiography(id uint, biography string) error {
 	if !data.ValidateBiography(biography) {
-		return errors.New("invalid biography")
+		return errValidation
 	}
 	var user User
 	data.db.First(&user, id)
 	if user.ID != id {
-		return errors.New("user does not exist")
+		return errUserNotFound
 	}
 	user.Biography = biography
 	data.db.Save(&user)
 	return nil
 }
 
+// ValidateBiography checks if the biography text is valid.
 func (data *DataSource) ValidateBiography(biography string) bool {
 	return len(biography) <= biographyMaxLength
 }
 
+// ValidatePostTitle checks if the post title is valid.
 func (data *DataSource) ValidatePostTitle(title string) bool {
 	return len(title) <= postTitleMaxLength
 }
 
+// ValidatePostContent checks if the post content is valid.
 func (data *DataSource) ValidatePostContent(content string) bool {
 	return len(content) <= postContentMaxLength
 }
 
+// AddPost creates a new post by the given user and with the given title and content.
+// It returns the ID of the post and an error if the params are invalid.
 func (data *DataSource) AddPost(author uint, title, content string) (uint, error) {
 	if !data.ValidatePostTitle(title) || !data.ValidatePostContent(content) {
-		return 0, errors.New("invalid post title or content")
+		return 0, errValidation
 	}
 	post := Post{
 		UserID:  author,
@@ -328,41 +341,49 @@ func (data *DataSource) AddPost(author uint, title, content string) (uint, error
 	return post.ID, nil
 }
 
+// GetPost returns the post identified by the given unique ID.
+// It returns the post and an error if the ID does not exist.
 func (data *DataSource) GetPost(id uint) (*Post, error) {
 	var post Post
 	data.db.First(&post, id)
 	if post.ID != id {
-		return nil, errors.New("could not find post")
+		return nil, errPostNotFound
 	}
 	return &post, nil
 }
 
-func (data *DataSource) GetIdentity(user uint, email string) (*Identity, error) {
-	var identity Identity
-	data.db.Where("user_id = ? AND email = ?", user, email).First(&identity)
-	if identity.UserID != user {
-		return nil, errors.New("could not find identity")
+// GetIdentities retrieves the identities associated with the given user.
+// It returns a slice of identities and an error if no identity can be found.
+func (data *DataSource) GetIdentities(user uint) ([]Identity, error) {
+	var identities []Identity
+	data.db.Where("user_id = ?", user).Find(&identities)
+	if len(identities) == 0 {
+		return nil, errIdentityNotFound
 	}
-	return &identity, nil
+	return identities, nil
 }
 
+// GetIdentityByEmail retrieves the identity associated with the given email.
+// It returns the identity and an error if no identity can be found.
 func (data *DataSource) GetIdentityByEmail(email string) (*Identity, error) {
 	var identity Identity
 	data.db.Where("email = ?", email).First(&identity)
 	if identity.Email != email {
-		return nil, errors.New("could not find identity")
+		return nil, errIdentityNotFound
 	}
 	return &identity, nil
 }
 
+// ConfirmIdentity confirms a previously unconfirmed identity.
+// It returns an error if the identity does not exist or is already confirmed.
 func (data *DataSource) ConfirmIdentity(user uint, email string) error {
 	var identity Identity
 	data.db.Where("user_id = ? AND email = ?", user, email).First(&identity)
 	if identity.UserID != user {
-		return errors.New("could not find identity")
+		return errIdentityNotFound
 	}
 	if identity.Confirmed {
-		return errors.New("identity already confirmed")
+		return errIdentityAlreadyConfirmed
 	}
 	identity.Confirmed = true
 	data.db.Save(&identity)
