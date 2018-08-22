@@ -11,7 +11,7 @@ import (
 	"github.com/russross/blackfriday"
 )
 
-type PostContext struct {
+type postContext struct {
 	Context
 	ID          uint
 	Author      string
@@ -43,7 +43,7 @@ func (router *Router) postNew(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	postCtx := PostContext{Context: *ctx}
+	postCtx := postContext{Context: *ctx}
 	router.render(postEditTemplate, w, postCtx)
 }
 
@@ -91,7 +91,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Redirect(w, r, fmt.Sprintf("/%s/%d/", user.Name, id), http.StatusSeeOther)
 	} else {
-		postCtx := PostContext{
+		postCtx := postContext{
 			Context: *ctx,
 			Author:  user.Name,
 			Title:   title,
@@ -114,7 +114,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (router *Router) postContextWithID(r *http.Request, username string, id uint) PostContext {
+func (router *Router) postContextWithID(r *http.Request, username string, id uint) postContext {
 	ctx := router.defaultContext(r)
 	post, err := router.Data.GetPost(id)
 	if err != nil {
@@ -125,13 +125,13 @@ func (router *Router) postContextWithID(r *http.Request, username string, id uin
 		ctx.ErrorMessage = "User does not exist."
 	}
 	if ctx.ErrorMessage != "" {
-		return PostContext{
+		return postContext{
 			Context: *ctx,
 		}
 	}
 	rendered := blackfriday.MarkdownCommon([]byte(post.Content))
 	safe := bluemonday.UGCPolicy().SanitizeBytes(rendered)
-	return PostContext{
+	return postContext{
 		Context:     *ctx,
 		Self:        ctx.SignedIn && ctx.UserID == post.UserID,
 		Author:      user.Name,
@@ -143,7 +143,7 @@ func (router *Router) postContextWithID(r *http.Request, username string, id uin
 	}
 }
 
-func (router *Router) postContext(r *http.Request) PostContext {
+func (router *Router) postContext(r *http.Request) postContext {
 	userName := mux.Vars(r)["user"]
 	postID := mux.Vars(r)["post"]
 	id, _ := strconv.ParseUint(postID, 10, 64)

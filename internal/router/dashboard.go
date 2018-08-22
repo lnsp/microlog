@@ -7,22 +7,22 @@ import (
 	humanize "github.com/dustin/go-humanize"
 )
 
-type DashboardPost struct {
+type dashboardPost struct {
 	Title, Author, ID, Date string
 }
 
-type DashboardUser struct {
+type dashboardUser struct {
 	Name, MemberSince string
 }
 
-type DashboardContext struct {
+type dashboardContext struct {
 	Context
-	LatestPosts []DashboardPost
-	LatestUsers []DashboardUser
+	LatestPosts []dashboardPost
+	LatestUsers []dashboardUser
 }
 
-func (router *Router) dashboardContext(r *http.Request) *DashboardContext {
-	ctx := DashboardContext{
+func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
+	ctx := dashboardContext{
 		Context: *router.defaultContext(r),
 	}
 	posts, err := router.Data.GetRecentPosts(dashboardPostsLimit)
@@ -36,14 +36,14 @@ func (router *Router) dashboardContext(r *http.Request) *DashboardContext {
 		ctx.ErrorMessage = "An internal error occured, please try again."
 	}
 	j := 0
-	ctx.LatestPosts = make([]DashboardPost, len(posts))
+	ctx.LatestPosts = make([]dashboardPost, len(posts))
 	for _, post := range posts {
 		user, err := router.Data.GetUser(post.UserID)
 		if err != nil {
 			log.Errorln("Failed to fetch user:", err)
 			continue
 		}
-		ctx.LatestPosts[j] = DashboardPost{
+		ctx.LatestPosts[j] = dashboardPost{
 			Title:  post.Title,
 			Author: user.Name,
 			ID:     strconv.FormatUint(uint64(post.ID), 10),
@@ -51,9 +51,9 @@ func (router *Router) dashboardContext(r *http.Request) *DashboardContext {
 		}
 		j++
 	}
-	ctx.LatestUsers = make([]DashboardUser, len(users))
+	ctx.LatestUsers = make([]dashboardUser, len(users))
 	for i, user := range users {
-		ctx.LatestUsers[i] = DashboardUser{
+		ctx.LatestUsers[i] = dashboardUser{
 			Name:        user.Name,
 			MemberSince: humanize.Time(user.CreatedAt),
 		}

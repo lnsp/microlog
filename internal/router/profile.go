@@ -6,21 +6,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type ProfilePost struct {
+type profilePost struct {
 	Title  string
 	Date   string
 	Author string
 	ID     uint
 }
 
-type ProfileContext struct {
+type profileContext struct {
 	Context
 	Name        string
 	Biography   string
 	MemberSince string
 	PostCount   int
 	Self        bool
-	Posts       []ProfilePost
+	Posts       []profilePost
 }
 
 func (router *Router) profileRedirect(w http.ResponseWriter, r *http.Request) {
@@ -54,17 +54,17 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO: Sort by specific topic order (date etc.)
 	ctx := router.defaultContext(r)
-	profileCtx := ProfileContext{
+	profileCtx := profileContext{
 		Context:     *ctx,
 		Name:        user.Name,
 		Biography:   user.Biography,
 		MemberSince: user.CreatedAt.Format(timeFormat),
 		PostCount:   len(posts),
 		Self:        ctx.SignedIn && ctx.UserID == user.ID,
-		Posts:       make([]ProfilePost, len(posts)),
+		Posts:       make([]profilePost, len(posts)),
 	}
 	for i := range posts {
-		profileCtx.Posts[i] = ProfilePost{
+		profileCtx.Posts[i] = profilePost{
 			Title:  posts[i].Title,
 			Date:   posts[i].CreatedAt.Format(timeFormat),
 			Author: user.Name,
@@ -86,7 +86,7 @@ func (router *Router) profileEdit(w http.ResponseWriter, r *http.Request) {
 		router.renderNotFound(w, r, "profile")
 		return
 	}
-	profileCtx := ProfileContext{
+	profileCtx := profileContext{
 		Context:   *ctx,
 		Name:      user.Name,
 		Biography: user.Biography,
@@ -106,7 +106,7 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 		router.renderNotFound(w, r, "profile")
 	}
 	biography := r.FormValue("biography")
-	profileCtx := ProfileContext{
+	profileCtx := profileContext{
 		Context:   *ctx,
 		Name:      user.Name,
 		Biography: biography,
