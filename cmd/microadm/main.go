@@ -60,7 +60,7 @@ func getEmailToken(ctx *cli.Context) {
 		return
 	}
 	addr := ctx.String("address")
-	token, err := tokens.CreateEmailToken([]byte(ctx.GlobalString("secret")), addr, user.ID)
+	token, err := tokens.CreateEmailToken([]byte(ctx.GlobalString("secret")), addr, user.ID, tokens.PurposeConfirmation)
 	if err != nil {
 		fmt.Println("failed to create email token:", err)
 		return
