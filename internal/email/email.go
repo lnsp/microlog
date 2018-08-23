@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	confirmSubject = "Please confirm your email!"
+	confirmSubject = "Please confirm your email"
+	resetSubject   = "Reset your password"
 )
 
 var log = &logrus.Logger{
@@ -89,7 +90,7 @@ func (email *Client) SendPasswordReset(userID uint, emailAddr, url string) error
 		return errors.Wrap(err, "failed to render email")
 	}
 	receiver := mail.NewEmail(user.Name, emailAddr)
-	message := mail.NewSingleEmail(noreplySender, confirmSubject, receiver, buf.String(), buf.String())
+	message := mail.NewSingleEmail(noreplySender, resetSubject, receiver, buf.String(), buf.String())
 	resp, err := email.client.Send(message)
 	if err != nil {
 		return errors.Wrap(err, "failed to send email")
