@@ -31,6 +31,12 @@ var (
 	errValidation               = errors.New("can not validate params")
 )
 
+var (
+	unavailableNames = []string{
+		"microlog", "legal", "auth", "changelog", "profile", "post",
+	}
+)
+
 // User stores the name, biography, posts and identities of a user.
 type User struct {
 	gorm.Model
@@ -250,7 +256,7 @@ func (data *DataSource) DeletePost(user, id uint) error {
 }
 
 const (
-	namePattern       = `^[a-zA-Z0-9]+$`
+	namePattern       = `^[a-z0-9]+$`
 	passwordMinLength = 8
 )
 
@@ -258,6 +264,11 @@ var nameRegexp = regexp.MustCompile(namePattern)
 
 // ValidateName checks if the name satifies the alphanumeric characters-only and length condition.
 func (data *DataSource) ValidateName(name string) bool {
+	for _, n := range unavailableNames {
+		if n == name {
+			return false
+		}
+	}
 	return nameRegexp.Match([]byte(name)) && len(name) <= usernameMaxLength
 }
 
