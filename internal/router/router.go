@@ -101,6 +101,7 @@ func New(cfg Config) http.Handler {
 	serveMux.HandleFunc("/{user}/{post}/delete", router.postDelete).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/report", router.report).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/report", router.reportSubmit).Methods("POST")
+	serveMux.HandleFunc("/{user}/{post}/like", router.like).Methods("GET")
 	return serveMux
 }
 

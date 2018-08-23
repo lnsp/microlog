@@ -44,6 +44,7 @@ type User struct {
 	Biography  string
 	Posts      []Post     `gorm:"foreignkey:UserID"`
 	Identities []Identity `gorm:"foreignkey:UserID"`
+	Likes      []Like     `gorm:"foreignkey:UserID"`
 }
 
 // Identity stores the email, password hash and user.
@@ -69,6 +70,14 @@ type Post struct {
 	Title   string
 	Content string
 	UserID  uint
+	Likes   []Like `gorm:"foreignkey:PostID"`
+}
+
+// Like stores the user and post that got liked.
+type Like struct {
+	gorm.Model
+	UserID uint
+	PostID uint
 }
 
 // DataSource is a generic source of data.
@@ -91,7 +100,7 @@ func Open(path string) (*DataSource, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create data source")
 	}
-	db.AutoMigrate(&Identity{}, &User{}, &Post{})
+	db.AutoMigrate(&Identity{}, &User{}, &Post{}, &Report{}, &Like{})
 	return &DataSource{db}, nil
 }
 
@@ -406,4 +415,44 @@ func (data *DataSource) ConfirmIdentity(user uint, email string) error {
 	identity.Confirmed = true
 	data.db.Save(&identity)
 	return nil
+}
+
+// GetNumLikes retrieves the number of likes a post has received.
+// It returns the count and an error if something unexpected occurs.
+func (data *DataSource) GetNumberOfLikes(id uint) (int, error) {
+	var count int
+	data.db.Model(&Like{}).Where("post_id = ?", id).Count(&count)
+	return count, nil
+}
+
+// GetLikes retrieves the likes of a user.
+// It returns a slice of likes and an error if something unexpected occurs.
+func (data *DataSource) GetLikes(id uint) ([]Like, error) {
+	var likes []Like
+	data.db.Where("user_id = ?", id).Find(&likes)
+	return likes, nil
+}
+
+// ToggleLike deletes an already existing like and adds a missing one.
+// It returns an error if something unexpected occurs.
+func (data *DataSource) ToggleLike(user uint, post uint) error {
+	var like Like
+	data.db.Where("user_id = ? AND post_id = ?", user, post).First(&like)
+	if like.PostID != post {
+		data.db.Create(&Like{
+			PostID: post,
+			UserID: user,
+		})
+	} else {
+		data.db.Delete(&like)
+	}
+	return nil
+}
+
+// HasLiked checks if the user has liked the post.
+// It returns true if at least one matching like exists.
+func (data *DataSource) HasLiked(user, post uint) bool {
+	var count int
+	data.db.Model(&Like{}).Where("user_id = ? AND post_id = ?", user, post).Count(&count)
+	return count > 0
 }

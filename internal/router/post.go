@@ -20,6 +20,7 @@ type postContext struct {
 	HTMLContent template.HTML
 	Date        string
 	Self        bool
+	Liked       bool
 }
 
 func (router *Router) postRedirect(w http.ResponseWriter, r *http.Request) {
@@ -140,6 +141,7 @@ func (router *Router) postContextWithID(r *http.Request, username string, id uin
 		Content:     post.Content,
 		HTMLContent: template.HTML(safe),
 		Date:        post.CreatedAt.Format(timeFormat),
+		Liked:       ctx.SignedIn && router.Data.HasLiked(ctx.UserID, post.ID),
 	}
 }
 
@@ -183,4 +185,21 @@ func (router *Router) reportSubmit(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("User %d reported post %d", ctx.UserID, ctx.ID)
 	ctx.ErrorMessage = "Thank you for the report. Our team will look into the issue!"
 	router.render(postTemplate, w, ctx)
+}
+
+func (router *Router) like(w http.ResponseWriter, r *http.Request) {
+	ctx := router.defaultContext(r)
+	if !ctx.SignedIn {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	vars := mux.Vars(r)
+	author := vars["user"]
+	post := vars["post"]
+	postID, _ := strconv.ParseUint(post, 10, 64)
+	if err := router.Data.ToggleLike(ctx.UserID, uint(postID)); err != nil {
+		log.Errorln("Failed to toggle like:", err)
+	}
+	log.Debugf("User %d liked post %d", ctx.UserID, postID)
+	http.Redirect(w, r, "/"+author+"/"+post, http.StatusSeeOther)
 }

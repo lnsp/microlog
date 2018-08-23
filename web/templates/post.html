@@ -12,6 +12,8 @@
     <a href="delete">delete</a>
     {{ end }}
     <a href="report">report</a>
+    <a href="like">{{ if .Liked }}unlike{{ else }}like{{ end }}</a>
+    <a href="comment">comment</a>
     <!-- All post actions come here-->
     <!-- TODO: Add likes and comments -->
 </p>
