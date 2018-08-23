@@ -4,11 +4,19 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"regexp"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/lnsp/microlog/internal/email"
 	"github.com/lnsp/microlog/internal/models"
+	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/css"
+	"github.com/tdewolff/minify/html"
+	"github.com/tdewolff/minify/js"
+	"github.com/tdewolff/minify/json"
+	"github.com/tdewolff/minify/svg"
+	"github.com/tdewolff/minify/xml"
 )
 
 const (
@@ -52,6 +60,7 @@ type Config struct {
 	EmailSecret   []byte
 	DataSource    *models.DataSource
 	PublicAddress string
+	Minify        bool
 }
 
 func New(cfg Config) http.Handler {
@@ -95,6 +104,18 @@ func New(cfg Config) http.Handler {
 	return serveMux
 }
 
+var minifier *minify.M
+
+func init() {
+	minifier = minify.New()
+	minifier.AddFunc("text/css", css.Minify)
+	minifier.AddFunc("text/html", html.Minify)
+	minifier.AddFunc("image/svg+xml", svg.Minify)
+	minifier.AddFuncRegexp(regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$"), js.Minify)
+	minifier.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
+	minifier.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
+}
+
 type Context struct {
 	ErrorMessage string
 	HeadControls bool
@@ -108,10 +129,13 @@ type Router struct {
 	SessionSecret []byte
 	EmailSecret   []byte
 	PublicAddress string
+	Minification  bool
 }
 
 func (router *Router) render(tmp *template.Template, w http.ResponseWriter, ctx interface{}) {
-	if err := tmp.Execute(w, ctx); err != nil {
+	mw := minifier.Writer("text/html", w)
+	defer mw.Close()
+	if err := tmp.Execute(mw, ctx); err != nil {
 		log.Errorf("failed to render template %s: %v", tmp.Name(), err)
 	}
 }
