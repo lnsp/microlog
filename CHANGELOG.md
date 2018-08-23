@@ -6,3 +6,4 @@ All notable changes to this project will be documented in this file.
 - Publicly available changelog on [microlog.co/changelog](https://microlog.co/changelog)
 - Reorganize profile view and add 'Settings' subsection
 - Make specific routed names unavailable for sign up like `microlog`, `auth` and `profile`
+- Support on-the-fly minification of responses

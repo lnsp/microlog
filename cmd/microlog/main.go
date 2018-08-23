@@ -3,10 +3,18 @@ package main
 import (
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/css"
+	"github.com/tdewolff/minify/html"
+	"github.com/tdewolff/minify/js"
+	"github.com/tdewolff/minify/json"
+	"github.com/tdewolff/minify/svg"
+	"github.com/tdewolff/minify/xml"
 
 	"github.com/lnsp/microlog/internal/models"
 	"github.com/lnsp/microlog/internal/router"
@@ -25,6 +33,7 @@ type specification struct {
 	Datasource string `required:"true" desc:"Database file name"`
 	Session    string `default:"secret" desc:"Shared session token secret"`
 	Email      string `default:"secret" desc:"Shared email token secret"`
+	Minify     bool   `default:"false" desc:"Minify all responses"`
 }
 
 func main() {
@@ -37,12 +46,22 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed to open data source:", err)
 	}
-	handler := router.New(router.Config{
+	var handler http.Handler = router.New(router.Config{
 		SessionSecret: []byte(spec.Session),
 		EmailSecret:   []byte(spec.Email),
 		DataSource:    dataSource,
 		PublicAddress: spec.PublicAddr,
 	})
+	if spec.Minify {
+		minifier := minify.New()
+		minifier.AddFunc("text/css", css.Minify)
+		minifier.AddFunc("text/html", html.Minify)
+		minifier.AddFunc("image/svg+xml", svg.Minify)
+		minifier.AddFuncRegexp(regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$"), js.Minify)
+		minifier.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
+		minifier.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
+		handler = minifier.Middleware(handler)
+	}
 	server := &http.Server{
 		Handler:           logger(handler),
 		Addr:              spec.Addr,
