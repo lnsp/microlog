@@ -1,16 +1,22 @@
 {{ define "content" }}
-<h2>{{ .Name }}</small></h2>
+<h2 class="profile-name">{{ .Name }}</small></h2>
 {{ if .Biography }}
-<p>
+<div class="profile-biography">
     <h4>Biography</h4>
-    {{ .Biography }}
-</p>
+    {{ if .Self }}
+    <a href="/profile/edit">edit</a>
+    {{ end }}
+    <p>{{ .Biography }}</p>
+</div>
 {{ end }}
 {{ if .Self }}
-<p>
-    <a href="/profile/edit">edit</a>
-    <a href="/profile/delete">delete</a>
-</p>
+<div class="profile-settings">
+    <h4>Settings</h4>
+    <ul class="item-listing">
+        <li><a href="/auth/forgot">reset password</a></li>
+        <li><a href="/auth/delete">delete account</a></li>
+    </ul>
+</div>
 {{ end }}
 <hr>
 <ul class="item-listing">
