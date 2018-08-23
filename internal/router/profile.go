@@ -121,22 +121,3 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 	}
 	http.Redirect(w, r, "/"+user.Name, http.StatusSeeOther)
 }
-
-func (router *Router) profileDelete(w http.ResponseWriter, r *http.Request) {
-	ctx := router.defaultContext(r)
-	if !ctx.SignedIn {
-		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
-		return
-	}
-	router.render(profileDeleteTemplate, w, ctx)
-}
-
-func (router *Router) profileDeleteSubmit(w http.ResponseWriter, r *http.Request) {
-	ctx := router.defaultContext(r)
-	if !ctx.SignedIn {
-		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
-		return
-	}
-	router.Data.DeleteUser(ctx.UserID)
-	http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
-}

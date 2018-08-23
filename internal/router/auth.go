@@ -243,3 +243,22 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 	log.Debugln("User", name, "just signed up")
 	router.render(signupSuccessTemplate, w, ctx)
 }
+
+func (router *Router) delete(w http.ResponseWriter, r *http.Request) {
+	ctx := router.defaultContext(r)
+	if !ctx.SignedIn {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	router.render(profileDeleteTemplate, w, ctx)
+}
+
+func (router *Router) deleteSubmit(w http.ResponseWriter, r *http.Request) {
+	ctx := router.defaultContext(r)
+	if !ctx.SignedIn {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	router.Data.DeleteUser(ctx.UserID)
+	http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
+}
