@@ -10,8 +10,9 @@
     {{ if .Self }}
     <a href="edit">edit</a>
     <a href="delete">delete</a>
-    {{ end }}
+    {{ else }}
     <a href="report">report</a>
+    {{ end }}
     <a href="like">{{ if .Liked }}unlike{{ else }}like{{ end }}</a>
     <a href="comment">comment</a>
     <!-- All post actions come here-->
