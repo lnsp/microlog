@@ -31,6 +31,7 @@
     }
     h1, h2, h3, h4, h5, h6 {
         font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        margin: 0.5em 0 0.5em 0;
     }
     .nav-item {
         display: inline-block;
@@ -130,6 +131,9 @@
         justify-content: space-between;
         align-items: center;
     }
+    .profile-biography>h4 {
+        display: inline-block;
+    }
     </style>
 </head>
 <body>
@@ -159,6 +163,7 @@
     {{ template "content" . }}
     <hr>
     <footer>&copy; 2018 microlog.
+        | <a href="/changelog">changelog</a>
         | <a href="/legal/terms-of-service">terms of service</a>
         | <a href="/legal/privacy-policy">privacy policy</a>
     </footer>
