@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 - 'Like' button added for expression of joy and satisfaction over a post
 
+### Changed
+- Replace 'Recent Posts' on dashboard with 'Most popular posts this week'
+
 ### Fixed
 - Authors can not report their own posts anymore
 
