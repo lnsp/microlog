@@ -3,12 +3,14 @@ package router
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	humanize "github.com/dustin/go-humanize"
 )
 
 type dashboardPost struct {
 	Title, Author, ID, Date string
+	Likes                   int
 }
 
 type dashboardUser struct {
@@ -17,42 +19,43 @@ type dashboardUser struct {
 
 type dashboardContext struct {
 	Context
-	LatestPosts []dashboardPost
-	LatestUsers []dashboardUser
+	PopularPosts []dashboardPost
+	LatestUsers  []dashboardUser
 }
 
 func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 	ctx := dashboardContext{
 		Context: *router.defaultContext(r),
 	}
-	posts, err := router.Data.GetRecentPosts(dashboardPostsLimit)
+	popularPosts, err := router.Data.GetLikedPosts(time.Now().Add(-time.Hour*24*7), dashboardPostsLimit)
 	if err != nil {
 		log.Errorln("Failed to fetch recent posts:", err)
 		ctx.ErrorMessage = "An internal error occured, please try again."
 	}
-	users, err := router.Data.GetRecentUsers(dashboardUsersLimit)
+	recentUsers, err := router.Data.GetRecentUsers(dashboardUsersLimit)
 	if err != nil {
 		log.Errorln("Failed to fetch recent signups:", err)
 		ctx.ErrorMessage = "An internal error occured, please try again."
 	}
 	j := 0
-	ctx.LatestPosts = make([]dashboardPost, len(posts))
-	for _, post := range posts {
+	ctx.PopularPosts = make([]dashboardPost, len(popularPosts))
+	for _, post := range popularPosts {
 		user, err := router.Data.GetUser(post.UserID)
 		if err != nil {
 			log.Errorln("Failed to fetch user:", err)
 			continue
 		}
-		ctx.LatestPosts[j] = dashboardPost{
+		ctx.PopularPosts[j] = dashboardPost{
 			Title:  post.Title,
 			Author: user.Name,
 			ID:     strconv.FormatUint(uint64(post.ID), 10),
 			Date:   humanize.Time(post.CreatedAt),
+			Likes:  router.Data.GetLikeCount(post.ID),
 		}
 		j++
 	}
-	ctx.LatestUsers = make([]dashboardUser, len(users))
-	for i, user := range users {
+	ctx.LatestUsers = make([]dashboardUser, len(recentUsers))
+	for i, user := range recentUsers {
 		ctx.LatestUsers[i] = dashboardUser{
 			Name:        user.Name,
 			MemberSince: humanize.Time(user.CreatedAt),

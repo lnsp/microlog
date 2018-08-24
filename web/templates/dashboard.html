@@ -1,12 +1,17 @@
 {{ define "content" }}
 <div class="dashboard-group">
-<h2>Latest posts</h2>
+<h2>Popular posts</h2>
 <ul class="item-listing">
-    {{ range .LatestPosts }}
-    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> by <a href="/{{ .Author }}">{{ .Author }}</a><br><small>{{ .Date }}</small></li>
+    {{ range .PopularPosts }}
+    <li class="item-flex">
+        <div class="item-index">{{ .Likes }}</div>
+        <div class="item-body">
+            <a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> by <a href="/{{ .Author }}">{{ .Author }}</a>
+            <br><small>{{ .Date }}</small>
+        </div>
+    </li>
     {{ end }}
 </ul>
-</div>
 <div class="dashboard-group">
 <h2>New members</h2>
 <ul class="item-listing">
