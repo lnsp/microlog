@@ -468,7 +468,7 @@ LEFT JOIN (
 AS ranking
 ON posts.id = ranking.post_id
 WHERE deleted_at IS NULL AND created_at > ?
-ORDER BY ranking.votes DESC
+ORDER BY ranking.votes DESC, created_at DESC
 LIMIT ?`
 
 // GetLikedPosts returns the posts created since the given time ranked by their vote count.
@@ -477,4 +477,11 @@ func (data *DataSource) GetLikedPosts(since time.Time, count int) ([]Post, error
 	var posts []Post
 	data.db.Raw(rankingQuery, since, count).Scan(&posts)
 	return posts, nil
+}
+
+// GetLikeCount returns the number of likes the post has received.
+func (data *DataSource) GetLikeCount(post uint) int {
+	var count int
+	data.db.Model(&Like{}).Where("post_id = ?", post).Count(&count)
+	return count
 }
