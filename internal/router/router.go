@@ -24,8 +24,8 @@ const (
 	resetURLFormat      = "/auth/reset?token=%s"
 	timeFormat          = "Monday, 2. January at 15:04"
 	sessionCookieName   = "session_token"
-	dashboardPostsLimit = 10
-	dashboardUsersLimit = 10
+	dashboardPostsLimit = 5
+	dashboardUsersLimit = 5
 )
 
 var log = &logrus.Logger{
