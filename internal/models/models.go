@@ -4,6 +4,7 @@ package models
 import (
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
@@ -455,4 +456,25 @@ func (data *DataSource) HasLiked(user, post uint) bool {
 	var count int
 	data.db.Model(&Like{}).Where("user_id = ? AND post_id = ?", user, post).Count(&count)
 	return count > 0
+}
+
+const rankingQuery = `
+SELECT id, created_at, updated_at, title, content, user_id
+FROM posts
+LEFT JOIN (
+	SELECT post_id, COUNT(*) as votes
+	FROM likes
+	WHERE deleted_at IS NULL GROUP BY user_id)
+AS ranking
+ON posts.id = ranking.post_id
+WHERE deleted_at IS NULL AND created_at > ?
+ORDER BY ranking.votes DESC
+LIMIT ?`
+
+// GetLikedPosts returns the posts created since the given time ranked by their vote count.
+// It returns the slice of posts
+func (data *DataSource) GetLikedPosts(since time.Time, count int) ([]Post, error) {
+	var posts []Post
+	data.db.Raw(rankingQuery, since, count).Scan(&posts)
+	return posts, nil
 }
