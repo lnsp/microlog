@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
 
+	"cloud.google.com/go/logging"
 	"github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
 
@@ -26,6 +28,7 @@ type specification struct {
 	Session    string `default:"secret" desc:"Shared session token secret"`
 	Email      string `default:"secret" desc:"Shared email token secret"`
 	Minify     bool   `default:"false" desc:"Minify all responses"`
+	ProjectID  string `default:"microlog-213919" desc:"Google Cloud Project ID"`
 }
 
 func main() {
@@ -58,10 +61,15 @@ func main() {
 	}
 }
 
-func logger(h http.Handler) http.Handler {
+func logger(gclouID string, h http.Handler) http.Handler {
+	client, err := logging.NewClient(context.Background(), gcloudID)
+	if err != nil {
+		log.Fatalln("Failed to setup logging:", err)
+	}
+	logger := client.Logger("microlog").StandardLogger(logging.Debug)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t := time.Now()
 		h.ServeHTTP(w, r)
-		log.Debugf("%.3fms %s %s", time.Since(t).Seconds()*1000., r.Method, r.URL.Path)
+		logger.Printf("%.3fms %s %s", time.Since(t).Seconds()*1000., r.Method, r.URL.Path)
 	})
 }
