@@ -34,6 +34,9 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v0.0.0-20170918181015-86672fcb3f95 // indirect
 	github.com/sirupsen/logrus v1.0.6 // indirect
 	github.com/stretchr/testify v1.2.2 // indirect
+	github.com/tdewolff/minify v2.3.5+incompatible
+	github.com/tdewolff/parse v2.3.3+incompatible // indirect
+	github.com/tdewolff/test v0.0.0-20171106182207-265427085153 // indirect
 	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
 	golang.org/x/net v0.0.0-20180821023952-922f4815f713 // indirect
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
