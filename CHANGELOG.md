@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
+## 2018-09-14
+### Added
+- Improve internal logging capabilities
+- Add link to GitHub issues project page to footer
+
 ## 2018-08-24
 ### Added
 - 'Like' button added for expression of joy and satisfaction over a post
