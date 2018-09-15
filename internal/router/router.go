@@ -57,6 +57,7 @@ var (
 
 type Config struct {
 	SessionSecret []byte
+	EmailClient   *email.Client
 	EmailSecret   []byte
 	DataSource    *models.DataSource
 	PublicAddress string
@@ -68,7 +69,7 @@ func New(cfg Config) http.Handler {
 		Data:          cfg.DataSource,
 		SessionSecret: cfg.SessionSecret,
 		EmailSecret:   cfg.EmailSecret,
-		Email:         email.NewClient(cfg.DataSource, cfg.EmailSecret),
+		EmailClient:   cfg.EmailClient,
 		PublicAddress: cfg.PublicAddress,
 	}
 	serveMux := mux.NewRouter()
@@ -125,7 +126,7 @@ type Context struct {
 }
 
 type Router struct {
-	Email         *email.Client
+	EmailClient   *email.Client
 	Data          *models.DataSource
 	SessionSecret []byte
 	EmailSecret   []byte

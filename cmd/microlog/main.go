@@ -8,6 +8,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
 
+	"github.com/lnsp/microlog/internal/email"
 	"github.com/lnsp/microlog/internal/models"
 	"github.com/lnsp/microlog/internal/router"
 )
@@ -20,12 +21,13 @@ var log = &logrus.Logger{
 }
 
 type specification struct {
-	PublicAddr string `default:"localhost:8080" desc:"Public address the server is reachable on"`
-	Addr       string `default:":8080" desc:"Address the server is listening on"`
-	Datasource string `required:"true" desc:"Database file name"`
-	Session    string `default:"secret" desc:"Shared session token secret"`
-	Email      string `default:"secret" desc:"Shared email token secret"`
-	Minify     bool   `default:"false" desc:"Minify all responses"`
+	PublicAddr  string `default:"localhost:8080" desc:"Public address the server is reachable on"`
+	Addr        string `default:":8080" desc:"Address the server is listening on"`
+	Datasource  string `required:"true" desc:"Database file name"`
+	Session     string `default:"secret" desc:"Shared session token secret"`
+	Email       string `default:"secret" desc:"Shared email token secret"`
+	SendgridKey string `envconfig:"SENDGRID_API_KEY" default:"" desc:"SendGrid API Key"`
+	Minify      bool   `default:"false" desc:"Minify all responses"`
 }
 
 func main() {
@@ -41,6 +43,7 @@ func main() {
 	handler := router.New(router.Config{
 		SessionSecret: []byte(spec.Session),
 		EmailSecret:   []byte(spec.Email),
+		EmailClient:   email.NewClient(dataSource, []byte(spec.Email), spec.SendgridKey),
 		DataSource:    dataSource,
 		PublicAddress: spec.PublicAddr,
 		Minify:        true,

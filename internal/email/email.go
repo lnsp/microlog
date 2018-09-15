@@ -39,11 +39,11 @@ type Client struct {
 	secret []byte
 }
 
-func NewClient(dataSource *models.DataSource, tokenSecret []byte) *Client {
+func NewClient(dataSource *models.DataSource, tokenSecret []byte, apiKey string) *Client {
 	return &Client{
 		data:   dataSource,
 		secret: tokenSecret,
-		client: sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY")),
+		client: sendgrid.NewSendClient(apiKey),
 	}
 }
 
