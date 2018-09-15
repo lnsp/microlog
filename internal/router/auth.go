@@ -71,7 +71,7 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	id, err := router.Data.GetIdentityByEmail(email)
 	if err == nil && id.Confirmed {
-		if err := router.Email.SendPasswordReset(id.UserID, email, router.PublicAddress+resetURLFormat); err != nil {
+		if err := router.EmailClient.SendPasswordReset(id.UserID, email, router.PublicAddress+resetURLFormat); err != nil {
 			log.Errorln("Failed to send reset email:", err)
 			ctx.Success = false
 			ctx.ErrorMessage = "Unexpected internal error, please try again."
@@ -181,8 +181,18 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+type signupContext struct {
+	Context
+	Name      string
+	Email     string
+	Password  string
+	AcceptTOS bool
+}
+
 func (router *Router) signup(w http.ResponseWriter, r *http.Request) {
-	ctx := router.defaultContext(r)
+	ctx := &signupContext{
+		Context: *router.defaultContext(r),
+	}
 	ctx.HeadControls = false
 	router.render(signupTemplate, w, ctx)
 }
@@ -200,25 +210,37 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 		passwordConfirm = r.FormValue("password_confirm")
 		acceptTOS       = r.FormValue("accept_tos")
 	)
-
 	var (
-		ctx        = router.defaultContext(r)
+		ctx = &signupContext{
+			Name:      name,
+			Email:     email,
+			Password:  password,
+			AcceptTOS: acceptTOS == "on",
+			Context:   *router.defaultContext(r),
+		}
 		errMessage string
 	)
 	if password != passwordConfirm {
 		errMessage = "Passwords do not match."
+		ctx.Password = ""
 	} else if acceptTOS != "on" {
 		errMessage = "You have to accept the Terms of Service and Privacy Policy."
+		ctx.AcceptTOS = false
 	} else if !router.Data.ValidateEmail(email) {
 		errMessage = "Email must be an egligible email address."
+		ctx.Email = ""
 	} else if !router.Data.ValidatePassword(password) {
 		errMessage = "Password must have a minimum length of 8 characters."
+		ctx.Password = ""
 	} else if !router.Data.ValidateName(name) {
 		errMessage = "Username must only consist of alphanumerics."
+		ctx.Name = ""
 	} else if router.Data.EmailExists(email) {
 		errMessage = "Email already exists."
+		ctx.Email = ""
 	} else if router.Data.NameExists(name) {
 		errMessage = "Name already exists."
+		ctx.Name = ""
 	}
 
 	if errMessage != "" {
@@ -234,7 +256,7 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := router.Email.SendConfirmation(userID, email, router.PublicAddress+confirmURLFormat); err != nil {
+	if err := router.EmailClient.SendConfirmation(userID, email, router.PublicAddress+confirmURLFormat); err != nil {
 		ctx.ErrorMessage = "Internal error occured, please try again."
 		router.render(signupTemplate, w, ctx)
 		return

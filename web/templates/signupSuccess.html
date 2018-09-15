@@ -1,4 +1,5 @@
 {{ define "content" }}
-<p>You will receive an email to confirm your account. Welcome to the microlog community!</p>
+<p>First of all, thank you and welcome to the microlog community, {{ .Name }}.</p>
+<p>We've send a confirmation email to <strong>{{ .Email }}</strong>, please click the contained link to continue.</p>
 {{ end }}
 {{ define "title" }}Success!{{ end }}
