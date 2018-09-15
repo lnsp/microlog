@@ -22,7 +22,7 @@ const (
 
 var log = &logrus.Logger{
 	Out:       os.Stderr,
-	Formatter: new(logrus.TextFormatter),
+	Formatter: new(logrus.JSONFormatter),
 	Hooks:     make(logrus.LevelHooks),
 	Level:     logrus.DebugLevel,
 }
@@ -71,7 +71,12 @@ func (email *Client) SendConfirmation(userID uint, emailAddr string, url string)
 	if err != nil {
 		return errors.Wrap(err, "failed to send email")
 	}
-	log.Debugf("Send confirmation email to %s with token %s, got response %d %s", emailAddr, token, resp.StatusCode, resp.Body)
+	log.WithFields(logrus.Fields{
+		"type":   "confirmation",
+		"addr":   emailAddr,
+		"token":  token,
+		"status": resp.StatusCode,
+	}).Debug("send confirmation email")
 	return nil
 }
 
@@ -95,6 +100,11 @@ func (email *Client) SendPasswordReset(userID uint, emailAddr, url string) error
 	if err != nil {
 		return errors.Wrap(err, "failed to send email")
 	}
-	log.Debugf("Send password reset email to %s with token %s, got response %d %s", emailAddr, token, resp.StatusCode, resp.Body)
+	log.WithFields(logrus.Fields{
+		"type":   "passwordReset",
+		"addr":   emailAddr,
+		"token":  token,
+		"status": resp.StatusCode,
+	}).Debug("send password reset email")
 	return nil
 }

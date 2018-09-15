@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/russross/blackfriday"
 )
 
@@ -23,7 +24,10 @@ func (router *Router) changelog(w http.ResponseWriter, r *http.Request) {
 	changelogOnce.Do(func() {
 		bytes, err := ioutil.ReadFile(changelogPath)
 		if err != nil {
-			log.Errorln("Failed to read changelog:", err)
+			log.WithFields(logrus.Fields{
+				"changelog": changelogPath,
+				"addr":      r.RemoteAddr,
+			}).WithError(err).Error("failed to read changelog")
 			return
 		}
 		changelogHTML = template.HTML(blackfriday.MarkdownCommon(bytes))

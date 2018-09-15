@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 )
 
@@ -31,7 +32,10 @@ func (router *Router) profileRedirect(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := router.Data.GetUser(ctx.UserID)
 	if err != nil {
-		log.Errorln("Failed to find user:", err)
+		log.WithFields(logrus.Fields{
+			"id":   ctx.UserID,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Error("failed to find user")
 		http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
 		return
 	}
@@ -42,13 +46,20 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 	name := mux.Vars(r)["user"]
 	user, err := router.Data.GetUserByName(name)
 	if err != nil {
-		log.Debugln("Failed to find user", name)
+		log.WithFields(logrus.Fields{
+			"name": name,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Debug("failed to find user")
 		router.renderNotFound(w, r, "profile")
 		return
 	}
 	posts, err := router.Data.GetPostsByUser(user.ID)
 	if err != nil {
-		log.Errorln("Failed to get posts for user", user.ID)
+		log.WithFields(logrus.Fields{
+			"id":   user.ID,
+			"name": user.Name,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Error("failed to get posts")
 		router.renderNotFound(w, r, "profile")
 		return
 	}
@@ -82,7 +93,10 @@ func (router *Router) profileEdit(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := router.Data.GetUser(ctx.UserID)
 	if err != nil {
-		log.Debugln("Failed to find user:", err)
+		log.WithFields(logrus.Fields{
+			"id":   ctx.UserID,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Error("failed to find user")
 		router.renderNotFound(w, r, "profile")
 		return
 	}
@@ -102,8 +116,12 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 	}
 	user, err := router.Data.GetUser(ctx.UserID)
 	if err != nil {
-		log.Debugln("Failed to find user:", err)
+		log.WithFields(logrus.Fields{
+			"id":   ctx.UserID,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Error("failed to find user")
 		router.renderNotFound(w, r, "profile")
+		return
 	}
 	biography := r.FormValue("biography")
 	profileCtx := profileContext{
@@ -117,7 +135,19 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if err := router.Data.SetBiography(ctx.UserID, biography); err != nil {
-		log.Errorln("Failed to set biography:", err)
+		log.WithFields(logrus.Fields{
+			"id":   user.ID,
+			"name": user.Name,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Error("failed to update biography")
+		profileCtx.ErrorMessage = "Unexpected internal error, please try again."
+		router.render(profileEditTemplate, w, profileCtx)
+		return
 	}
+	log.WithFields(logrus.Fields{
+		"id":   user.ID,
+		"name": user.Name,
+		"addr": r.RemoteAddr,
+	}).Debug("updated user profile")
 	http.Redirect(w, r, "/"+user.Name, http.StatusSeeOther)
 }

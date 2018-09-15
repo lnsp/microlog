@@ -30,7 +30,7 @@ const (
 
 var log = &logrus.Logger{
 	Out:       os.Stderr,
-	Formatter: new(logrus.TextFormatter),
+	Formatter: new(logrus.JSONFormatter),
 	Hooks:     make(logrus.LevelHooks),
 	Level:     logrus.DebugLevel,
 }
@@ -138,7 +138,9 @@ func (router *Router) render(tmp *template.Template, w http.ResponseWriter, ctx 
 	mw := minifier.Writer("text/html", w)
 	defer mw.Close()
 	if err := tmp.Execute(mw, ctx); err != nil {
-		log.Errorf("failed to render template %s: %v", tmp.Name(), err)
+		log.WithFields(logrus.Fields{
+			"name": tmp.Name(),
+		}).WithError(err).Error("failed to render template")
 	}
 }
 

@@ -43,6 +43,7 @@ type User struct {
 	gorm.Model
 	Name       string
 	Biography  string
+	Admin      bool
 	Posts      []Post     `gorm:"foreignkey:UserID"`
 	Identities []Identity `gorm:"foreignkey:UserID"`
 	Likes      []Like     `gorm:"foreignkey:UserID"`
@@ -89,13 +90,16 @@ type DataSource struct {
 var log = &logrus.Logger{
 	Out:       os.Stderr,
 	Hooks:     make(logrus.LevelHooks),
-	Formatter: new(logrus.TextFormatter),
+	Formatter: new(logrus.JSONFormatter),
 	Level:     logrus.DebugLevel,
 }
 
 // Open instantiates a new data source with the given file as a backend.
 func Open(path string) (*DataSource, error) {
-	log.Infoln("Opening sqlite3 database", path)
+	log.WithFields(logrus.Fields{
+		"path": path,
+		"type": "sqlite3",
+	}).Info("accessing database")
 	db, err := gorm.Open("sqlite3", path)
 	db.SetLogger(log)
 	if err != nil {

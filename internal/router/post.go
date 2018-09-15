@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
@@ -31,7 +32,11 @@ func (router *Router) postRedirect(w http.ResponseWriter, r *http.Request) {
 func (router *Router) postDelete(w http.ResponseWriter, r *http.Request) {
 	ctx := router.postContext(r)
 	if err := router.Data.DeletePost(ctx.UserID, ctx.ID); err != nil {
-		log.Errorln("Failed to delete post:", err)
+		log.WithFields(logrus.Fields{
+			"id":   ctx.UserID,
+			"post": ctx.ID,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Error("failed to delete post")
 		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
 		return
 	}
@@ -71,7 +76,11 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := router.Data.GetUser(ctx.UserID)
 	if err != nil {
-		log.Errorln("Failed to find user:", err)
+		log.WithFields(logrus.Fields{
+			"id":   ctx.UserID,
+			"post": postID,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Error("failed to find user")
 		router.renderNotFound(w, r, "user")
 		return
 	}
@@ -79,17 +88,44 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 		id, _ := strconv.ParseUint(postID, 10, 64)
 		post, err := router.Data.GetPost(uint(id))
 		if err != nil {
-			log.Debugln("Failed to find post:", err)
+			log.WithFields(logrus.Fields{
+				"id":   ctx.UserID,
+				"post": id,
+				"addr": r.RemoteAddr,
+			}).WithError(err).Error("failed to find post")
 			router.renderNotFound(w, r, "post")
 			return
 		}
-		if err := router.Data.UpdatePost(user.ID, post.ID, title, content); err != nil {
-			log.Errorln("Failed to update post:", err)
-			postCtx := router.postContextWithID(r, user.Name, post.ID)
-			postCtx.ErrorMessage = "Unexpected internal error, please try again."
+		postCtx := postContext{
+			Context: *ctx,
+			Author:  user.Name,
+			Title:   title,
+			Content: content,
+		}
+		if !router.Data.ValidatePostTitle(title) {
+			postCtx.ErrorMessage = "Your title must have at max 80 characters."
+		} else if !router.Data.ValidatePostContent(content) {
+			postCtx.ErrorMessage = "Your content must have at max 80000 characters."
+		}
+		if postCtx.ErrorMessage != "" {
 			router.render(postEditTemplate, w, postCtx)
 			return
 		}
+		if err := router.Data.UpdatePost(user.ID, post.ID, title, content); err != nil {
+			postCtx.ErrorMessage = "Unexpected internal error, please try again."
+			log.WithFields(logrus.Fields{
+				"id":   user.ID,
+				"post": post.ID,
+				"addr": r.RemoteAddr,
+			}).WithError(err).Error("failed to update post")
+			router.render(postEditTemplate, w, postCtx)
+			return
+		}
+		log.WithFields(logrus.Fields{
+			"id":   user.ID,
+			"post": post.ID,
+			"addr": r.RemoteAddr,
+		}).Debug("updated post")
 		http.Redirect(w, r, fmt.Sprintf("/%s/%d/", user.Name, id), http.StatusSeeOther)
 	} else {
 		postCtx := postContext{
@@ -109,8 +145,20 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 		}
 		id, err := router.Data.AddPost(user.ID, title, content)
 		if err != nil {
-			log.Errorln("Failed to add post:", err)
+			log.WithFields(logrus.Fields{
+				"id":   user.ID,
+				"addr": r.RemoteAddr,
+			}).WithError(err).Error("failed to add post")
+			postCtx.ErrorMessage = "Unexpected internal error, please try again."
+			router.render(postEditTemplate, w, postCtx)
+			return
 		}
+		log.WithFields(logrus.Fields{
+			"id":    user.ID,
+			"post":  id,
+			"addr":  r.RemoteAddr,
+			"title": title,
+		}).Debug("added new post")
 		http.Redirect(w, r, fmt.Sprintf("/%s/%d/", user.Name, id), http.StatusSeeOther)
 	}
 }
@@ -182,7 +230,11 @@ func (router *Router) reportSubmit(w http.ResponseWriter, r *http.Request) {
 		router.render(reportTemplate, w, ctx)
 		return
 	}
-	log.Debugf("User %d reported post %d", ctx.UserID, ctx.ID)
+	log.WithFields(logrus.Fields{
+		"id":   ctx.UserID,
+		"post": ctx.ID,
+		"addr": r.RemoteAddr,
+	}).Debug("reported post")
 	ctx.ErrorMessage = "Thank you for the report. Our team will look into the issue!"
 	router.render(postTemplate, w, ctx)
 }
@@ -198,8 +250,17 @@ func (router *Router) like(w http.ResponseWriter, r *http.Request) {
 	post := vars["post"]
 	postID, _ := strconv.ParseUint(post, 10, 64)
 	if err := router.Data.ToggleLike(ctx.UserID, uint(postID)); err != nil {
-		log.Errorln("Failed to toggle like:", err)
+		log.WithFields(logrus.Fields{
+			"id":   ctx.UserID,
+			"post": postID,
+			"addr": r.RemoteAddr,
+		}).WithError(err).Error("failed to toggle like")
+		ctx.ErrorMessage = "Unexpected internal error, please try again."
 	}
-	log.Debugf("User %d liked post %d", ctx.UserID, postID)
-	http.Redirect(w, r, "/"+author+"/"+post, http.StatusSeeOther)
+	log.WithFields(logrus.Fields{
+		"id":   ctx.UserID,
+		"post": postID,
+		"addr": r.RemoteAddr,
+	}).Debug("toggled like")
+	http.Redirect(w, r, fmt.Sprintf("/%s/%s/", author, post), http.StatusSeeOther)
 }

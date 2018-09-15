@@ -16,7 +16,7 @@ import (
 var log = &logrus.Logger{
 	Out:       os.Stderr,
 	Hooks:     make(logrus.LevelHooks),
-	Formatter: new(logrus.TextFormatter),
+	Formatter: new(logrus.JSONFormatter),
 	Level:     logrus.DebugLevel,
 }
 
@@ -38,7 +38,9 @@ func main() {
 	}
 	dataSource, err := models.Open(spec.Datasource)
 	if err != nil {
-		log.Fatalln("Failed to open data source:", err)
+		log.WithFields(logrus.Fields{
+			"datasource": spec.Datasource,
+		}).Fatal("failed to open data source")
 	}
 	handler := router.New(router.Config{
 		SessionSecret: []byte(spec.Session),
@@ -55,9 +57,11 @@ func main() {
 		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout:      5 * time.Second,
 	}
-	log.Infoln("Listening on", spec.Addr)
+	log.WithFields(logrus.Fields{
+		"addr": spec.Addr,
+	}).Info("listening on address")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalln("Failed to listen:", err)
+		log.WithError(err).Fatal("failed to listen")
 	}
 }
 
@@ -65,6 +69,11 @@ func logger(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t := time.Now()
 		h.ServeHTTP(w, r)
-		log.Debugf("%.3fms %s %s", time.Since(t).Seconds()*1000., r.Method, r.URL.Path)
+		log.WithFields(logrus.Fields{
+			"time":       time.Since(t).Seconds() * 1000.,
+			"method":     r.Method,
+			"path":       r.URL.Path,
+			"remoteAddr": r.RemoteAddr,
+		}).Debug("handled request")
 	})
 }
