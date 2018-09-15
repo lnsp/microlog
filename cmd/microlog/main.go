@@ -70,10 +70,10 @@ func logger(h http.Handler) http.Handler {
 		t := time.Now()
 		h.ServeHTTP(w, r)
 		log.WithFields(logrus.Fields{
-			"time":       time.Since(t).Seconds() * 1000.,
-			"method":     r.Method,
-			"path":       r.URL.Path,
-			"remoteAddr": r.RemoteAddr,
+			"responseTime": time.Since(t).Seconds() * 1000.,
+			"method":       r.Method,
+			"path":         r.URL.Path,
+			"remoteAddr":   r.RemoteAddr,
 		}).Debug("handled request")
 	})
 }
