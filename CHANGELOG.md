@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Improve internal logging capabilities
 - Add link to GitHub issues project page to footer
+- Add Markdown notice on post edit page
 
 ## Changed
 - Remember form values after bad signup (name already in use, bad email etc.)
