@@ -5,7 +5,7 @@ services:
     ports:
     - '80:8080'
     volumes:
-    - /opt/micro:/data
+    - ./micro.db:/app/micro.db
     env_file:
     - prod.env
     logging:
