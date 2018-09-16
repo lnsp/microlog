@@ -23,3 +23,6 @@ services:
     ports:
       - '24224:24224'
       - '24224:24224/udp'
+networks:
+  elk:
+    external: true
