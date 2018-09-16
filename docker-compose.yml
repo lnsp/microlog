@@ -23,6 +23,8 @@ services:
     ports:
       - '24224:24224'
       - '24224:24224/udp'
+    networks:
+      - elk
 networks:
   elk:
     name: elk
