@@ -73,7 +73,7 @@ func logger(h http.Handler) http.Handler {
 			"responseTime": time.Since(t).Seconds() * 1000.,
 			"method":       r.Method,
 			"path":         r.URL.Path,
-			"remoteAddr":   r.RemoteAddr,
+			"remoteAddr":   utils.RemoteHost(r),
 		}).Debug("handled request")
 	})
 }

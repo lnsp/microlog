@@ -35,7 +35,7 @@ func (router *Router) postDelete(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
 			"post": ctx.ID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to delete post")
 		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
 		return
@@ -79,7 +79,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
 			"post": postID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to find user")
 		router.renderNotFound(w, r, "user")
 		return
@@ -91,7 +91,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 			log.WithFields(logrus.Fields{
 				"id":   ctx.UserID,
 				"post": id,
-				"addr": r.RemoteAddr,
+				"addr": utils.RemoteHost(r),
 			}).WithError(err).Error("failed to find post")
 			router.renderNotFound(w, r, "post")
 			return
@@ -116,7 +116,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 			log.WithFields(logrus.Fields{
 				"id":   user.ID,
 				"post": post.ID,
-				"addr": r.RemoteAddr,
+				"addr": utils.RemoteHost(r),
 			}).WithError(err).Error("failed to update post")
 			router.render(postEditTemplate, w, postCtx)
 			return
@@ -124,7 +124,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(logrus.Fields{
 			"id":   user.ID,
 			"post": post.ID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).Debug("updated post")
 		http.Redirect(w, r, fmt.Sprintf("/%s/%d/", user.Name, id), http.StatusSeeOther)
 	} else {
@@ -147,7 +147,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"id":   user.ID,
-				"addr": r.RemoteAddr,
+				"addr": utils.RemoteHost(r),
 			}).WithError(err).Error("failed to add post")
 			postCtx.ErrorMessage = "Unexpected internal error, please try again."
 			router.render(postEditTemplate, w, postCtx)
@@ -156,7 +156,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(logrus.Fields{
 			"id":    user.ID,
 			"post":  id,
-			"addr":  r.RemoteAddr,
+			"addr":  utils.RemoteHost(r),
 			"title": title,
 		}).Debug("added new post")
 		http.Redirect(w, r, fmt.Sprintf("/%s/%d/", user.Name, id), http.StatusSeeOther)
@@ -233,7 +233,7 @@ func (router *Router) reportSubmit(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(logrus.Fields{
 		"id":   ctx.UserID,
 		"post": ctx.ID,
-		"addr": r.RemoteAddr,
+		"addr": utils.RemoteHost(r),
 	}).Debug("reported post")
 	ctx.ErrorMessage = "Thank you for the report. Our team will look into the issue!"
 	router.render(postTemplate, w, ctx)
@@ -253,14 +253,14 @@ func (router *Router) like(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
 			"post": postID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to toggle like")
 		ctx.ErrorMessage = "Unexpected internal error, please try again."
 	}
 	log.WithFields(logrus.Fields{
 		"id":   ctx.UserID,
 		"post": postID,
-		"addr": r.RemoteAddr,
+		"addr": utils.RemoteHost(r),
 	}).Debug("toggled like")
 	http.Redirect(w, r, fmt.Sprintf("/%s/%s/", author, post), http.StatusSeeOther)
 }

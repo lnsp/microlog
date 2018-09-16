@@ -34,7 +34,7 @@ func (router *Router) profileRedirect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to find user")
 		http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
 		return
@@ -48,7 +48,7 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"name": name,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Debug("failed to find user")
 		router.renderNotFound(w, r, "profile")
 		return
@@ -58,7 +58,7 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(logrus.Fields{
 			"id":   user.ID,
 			"name": user.Name,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to get posts")
 		router.renderNotFound(w, r, "profile")
 		return
@@ -95,7 +95,7 @@ func (router *Router) profileEdit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to find user")
 		router.renderNotFound(w, r, "profile")
 		return
@@ -118,7 +118,7 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to find user")
 		router.renderNotFound(w, r, "profile")
 		return
@@ -138,7 +138,7 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 		log.WithFields(logrus.Fields{
 			"id":   user.ID,
 			"name": user.Name,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to update biography")
 		profileCtx.ErrorMessage = "Unexpected internal error, please try again."
 		router.render(profileEditTemplate, w, profileCtx)
@@ -147,7 +147,7 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 	log.WithFields(logrus.Fields{
 		"id":   user.ID,
 		"name": user.Name,
-		"addr": r.RemoteAddr,
+		"addr": utils.RemoteHost(r),
 	}).Debug("updated user profile")
 	http.Redirect(w, r, "/"+user.Name, http.StatusSeeOther)
 }

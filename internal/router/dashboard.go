@@ -32,7 +32,7 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to fetch popular posts")
 		ctx.ErrorMessage = "An internal error occured, please try again."
 	}
@@ -40,7 +40,7 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
-			"addr": r.RemoteAddr,
+			"addr": utils.RemoteHost(r),
 		}).WithError(err).Error("failed to fetch new users")
 		ctx.ErrorMessage = "An internal error occured, please try again."
 	}
@@ -52,7 +52,7 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 			log.WithFields(logrus.Fields{
 				"id":   ctx.UserID,
 				"post": post.ID,
-				"addr": r.RemoteAddr,
+				"addr": utils.RemoteHost(r),
 			}).WithError(err).Error("failed to fetch user")
 			continue
 		}

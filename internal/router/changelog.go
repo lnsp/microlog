@@ -26,7 +26,7 @@ func (router *Router) changelog(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"changelog": changelogPath,
-				"addr":      r.RemoteAddr,
+				"addr":      utils.RemoteHost(r),
 			}).WithError(err).Error("failed to read changelog")
 			return
 		}
