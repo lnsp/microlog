@@ -8,6 +8,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	"github.com/lnsp/microlog/internal/utils"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
 )

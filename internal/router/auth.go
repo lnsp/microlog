@@ -6,6 +6,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/lnsp/microlog/internal/tokens"
+	"github.com/lnsp/microlog/internal/utils"
 )
 
 type emailContext struct {

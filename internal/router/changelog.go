@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/lnsp/microlog/internal/utils"
 	"github.com/russross/blackfriday"
 )
 

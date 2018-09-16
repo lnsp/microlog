@@ -11,6 +11,7 @@ import (
 	"github.com/lnsp/microlog/internal/email"
 	"github.com/lnsp/microlog/internal/models"
 	"github.com/lnsp/microlog/internal/router"
+	"github.com/lnsp/microlog/internal/utils"
 )
 
 var log = &logrus.Logger{
