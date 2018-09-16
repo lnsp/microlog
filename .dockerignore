@@ -1,0 +1,5 @@
+.git
+micro.db
+sendgrid.env
+docker-compose.yml
+Dockerfile
