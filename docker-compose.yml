@@ -8,6 +8,8 @@ services:
     - ./micro.db:/app/micro.db
     env_file:
     - prod.env
+    depends_on:
+    - fluentd
     logging:
       driver: "fluentd"
       options:
