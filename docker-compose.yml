@@ -8,3 +8,18 @@ services:
     - /opt/micro:/data
     env_file:
     - prod.env
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: 'localhost:24224'
+        tag: httpd.access
+
+  fluentd:
+    build: ./fluentd
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+    external_links:
+      - docker-elk_elasticsearch_1:elasticsearch
+    ports:
+      - '24224:24224'
+      - '24224:24224/udp'
