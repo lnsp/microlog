@@ -28,10 +28,9 @@ require (
 	github.com/onsi/gomega v1.4.1 // indirect
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/russross/blackfriday v2.0.0+incompatible
+	github.com/russross/blackfriday v1.5.1
 	github.com/sendgrid/rest v2.4.1+incompatible // indirect
 	github.com/sendgrid/sendgrid-go v3.4.1+incompatible
-	github.com/shurcooL/sanitized_anchor_name v0.0.0-20170918181015-86672fcb3f95 // indirect
 	github.com/sirupsen/logrus v1.0.6 // indirect
 	github.com/stretchr/testify v1.2.2 // indirect
 	github.com/tdewolff/minify v2.3.5+incompatible
