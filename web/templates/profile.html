@@ -1,8 +1,8 @@
 {{ define "content" }}
-<h2 class="profile-name">{{ .Name }}</small></h2>
+<h1 class="profile-name">{{ .Name }}</small></h1>
 {{ if .Biography }}
 <div class="profile-biography">
-    <h4>Biography</h4>
+    <h3>Biography</h3>
     {{ if .Self }}
     <a href="/profile/edit">edit</a>
     {{ end }}

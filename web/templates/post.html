@@ -1,7 +1,8 @@
 {{ define "content" }}
 <div class="post-header">
-    <p>{{ .Date }}</p>
-    <h3>{{ .Title }} <small>by <a href="/{{ .Author }}">{{ .Author }}</a></small></h3>
+    <p class="post-date">{{ .Date }}</p>
+    <h1 class="post-title">{{ .Title }}</h1>
+    <h3 class="post-subtitle">by <a href="/{{ .Author }}">{{ .Author }}</a></h3>
 </div>
 <div class="post-content">
     <p>{{ .HTMLContent }}</p>

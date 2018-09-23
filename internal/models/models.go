@@ -34,7 +34,7 @@ var (
 
 var (
 	unavailableNames = []string{
-		"microlog", "legal", "auth", "changelog", "profile", "post",
+		"microlog", "legal", "auth", "changelog", "profile", "post", "explore",
 	}
 )
 
