@@ -2,8 +2,10 @@ version: '3.5'
 services:
   web:
     build: .
+    labels:
+    - "traefik.frontend.rule=Host:microlog.co"
     ports:
-    - '80:8080'
+    - '8080'
     volumes:
     - ./micro.db:/app/micro.db
     env_file:
