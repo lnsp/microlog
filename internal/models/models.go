@@ -69,10 +69,11 @@ type Report struct {
 // Post stores the title, content and author of a post.
 type Post struct {
 	gorm.Model
-	Title   string
-	Content string
-	UserID  uint
-	Likes   []Like `gorm:"foreignkey:PostID"`
+	Title    string
+	Content  string
+	ParentID uint
+	UserID   uint
+	Likes    []Like `gorm:"foreignkey:PostID"`
 }
 
 // Like stores the user and post that got liked.
@@ -384,6 +385,14 @@ func (data *DataSource) GetPost(id uint) (*Post, error) {
 	return &post, nil
 }
 
+// GetCommentsOn returns the comments on the given post.
+// It returns the slice of posts and never an error.
+func (data *DataSource) GetCommentsOn(id uint) ([]Post, error) {
+	var comments []Post
+	data.db.Where("parent_id = ?", id).Find(&comments)
+	return comments, nil
+}
+
 // GetIdentities retrieves the identities associated with the given user.
 // It returns a slice of identities and an error if no identity can be found.
 func (data *DataSource) GetIdentities(user uint) ([]Identity, error) {
@@ -422,7 +431,7 @@ func (data *DataSource) ConfirmIdentity(user uint, email string) error {
 	return nil
 }
 
-// GetNumLikes retrieves the number of likes a post has received.
+// GetNumberOfLikes retrieves the number of likes a post has received.
 // It returns the count and an error if something unexpected occurs.
 func (data *DataSource) GetNumberOfLikes(id uint) (int, error) {
 	var count int
