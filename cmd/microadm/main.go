@@ -54,7 +54,7 @@ func getEmailToken(ctx *cli.Context) {
 		return
 	}
 	name := ctx.String("user")
-	user, err := dataSource.GetUserByName(name)
+	user, err := dataSource.UserByName(name)
 	if err != nil {
 		fmt.Println("user does not exist:", err)
 		return

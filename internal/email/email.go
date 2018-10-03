@@ -52,7 +52,7 @@ type emailContext struct {
 }
 
 func (email *Client) SendConfirmation(userID uint, emailAddr string, url string) error {
-	user, err := email.data.GetUser(userID)
+	user, err := email.data.User(userID)
 	if err != nil {
 		return errors.Wrap(err, "failed to find user")
 	}
@@ -81,7 +81,7 @@ func (email *Client) SendConfirmation(userID uint, emailAddr string, url string)
 }
 
 func (email *Client) SendPasswordReset(userID uint, emailAddr, url string) error {
-	user, err := email.data.GetUser(userID)
+	user, err := email.data.User(userID)
 	if err != nil {
 		return errors.Wrap(err, "failed to find user")
 	}

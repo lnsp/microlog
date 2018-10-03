@@ -31,7 +31,7 @@ func (router *Router) profileRedirect(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	user, err := router.Data.GetUser(ctx.UserID)
+	user, err := router.Data.User(ctx.UserID)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
@@ -45,7 +45,7 @@ func (router *Router) profileRedirect(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 	name := mux.Vars(r)["user"]
-	user, err := router.Data.GetUserByName(name)
+	user, err := router.Data.UserByName(name)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"name": name,
@@ -54,7 +54,7 @@ func (router *Router) profile(w http.ResponseWriter, r *http.Request) {
 		router.renderNotFound(w, r, "profile")
 		return
 	}
-	posts, err := router.Data.GetPostsByUser(user.ID)
+	posts, err := router.Data.PostsByUser(user.ID)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   user.ID,
@@ -92,7 +92,7 @@ func (router *Router) profileEdit(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	user, err := router.Data.GetUser(ctx.UserID)
+	user, err := router.Data.User(ctx.UserID)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
@@ -115,7 +115,7 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	user, err := router.Data.GetUser(ctx.UserID)
+	user, err := router.Data.User(ctx.UserID)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
@@ -135,7 +135,7 @@ func (router *Router) profileEditSubmit(w http.ResponseWriter, r *http.Request) 
 		router.render(profileEditTemplate, w, profileCtx)
 		return
 	}
-	if err := router.Data.SetBiography(ctx.UserID, biography); err != nil {
+	if err := router.Data.UpdateBiography(ctx.UserID, biography); err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   user.ID,
 			"name": user.Name,

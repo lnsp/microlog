@@ -29,7 +29,7 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 	ctx := dashboardContext{
 		Context: *router.defaultContext(r),
 	}
-	popularPosts, err := router.Data.GetLikedPosts(time.Now().Add(-time.Hour*24*7), dashboardPostsLimit)
+	popularPosts, err := router.Data.PopularPosts(time.Now().Add(-time.Hour*24*7), dashboardPostsLimit)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
@@ -37,7 +37,7 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 		}).WithError(err).Error("failed to fetch popular posts")
 		ctx.ErrorMessage = "An internal error occured, please try again."
 	}
-	recentUsers, err := router.Data.GetRecentUsers(dashboardUsersLimit)
+	recentUsers, err := router.Data.RecentUsers(dashboardUsersLimit)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
@@ -48,7 +48,7 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 	j := 0
 	ctx.PopularPosts = make([]dashboardPost, len(popularPosts))
 	for _, post := range popularPosts {
-		user, err := router.Data.GetUser(post.UserID)
+		user, err := router.Data.User(post.UserID)
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"id":   ctx.UserID,
@@ -57,12 +57,21 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 			}).WithError(err).Error("failed to fetch user")
 			continue
 		}
+		likes, err := router.Data.NumberOfLikes(post.ID)
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"id":   ctx.UserID,
+				"post": post.ID,
+				"addr": utils.RemoteHost(r),
+			}).WithError(err).Error("failed to retrieve number of likes")
+			continue
+		}
 		ctx.PopularPosts[j] = dashboardPost{
 			Title:  post.Title,
 			Author: user.Name,
 			ID:     strconv.FormatUint(uint64(post.ID), 10),
 			Date:   humanize.Time(post.CreatedAt),
-			Likes:  router.Data.GetLikeCount(post.ID),
+			Likes:  likes,
 		}
 		j++
 	}

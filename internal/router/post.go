@@ -75,7 +75,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	user, err := router.Data.GetUser(ctx.UserID)
+	user, err := router.Data.User(ctx.UserID)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
@@ -87,7 +87,7 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	if postID != "" {
 		id, _ := strconv.ParseUint(postID, 10, 64)
-		post, err := router.Data.GetPost(uint(id))
+		post, err := router.Data.Post(uint(id))
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"id":   ctx.UserID,
@@ -166,11 +166,11 @@ func (router *Router) postSubmit(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) postContextWithID(r *http.Request, username string, id uint) postContext {
 	ctx := router.defaultContext(r)
-	post, err := router.Data.GetPost(id)
+	post, err := router.Data.Post(id)
 	if err != nil {
 		ctx.ErrorMessage = "Post does not exist."
 	}
-	user, err := router.Data.GetUserByName(username)
+	user, err := router.Data.UserByName(username)
 	if err != nil {
 		ctx.ErrorMessage = "User does not exist."
 	}

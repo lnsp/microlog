@@ -90,7 +90,7 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 	}
 	email := r.FormValue("email")
-	id, err := router.Data.GetIdentityByEmail(email)
+	id, err := router.Data.IdentityByEmail(email)
 	if err == nil && id.Confirmed {
 		if err := router.EmailClient.SendPasswordReset(id.UserID, email, router.PublicAddress+resetURLFormat); err != nil {
 			ctx.Success = false
@@ -230,7 +230,7 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 		router.render(loginTemplate, w, ctx)
 		return
 	}
-	user, err := router.Data.GetUser(id)
+	user, err := router.Data.User(id)
 	if err != nil {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "Unexpected internal error, please try again."

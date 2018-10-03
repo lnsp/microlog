@@ -227,9 +227,9 @@ func (data *DataSource) NameExists(name string) bool {
 	return count > 0
 }
 
-// GetUser retrieves the user with the specified ID.
+// User retrieves the user with the specified ID.
 // It returns a reference to the user instance and an error if unsuccessful.
-func (data *DataSource) GetUser(id uint) (*User, error) {
+func (data *DataSource) User(id uint) (*User, error) {
 	var user User
 	data.db.First(&user, id)
 	if user.ID != id {
@@ -238,9 +238,9 @@ func (data *DataSource) GetUser(id uint) (*User, error) {
 	return &user, nil
 }
 
-// GetUserByName returns the user identified by the given username.
+// UserByName returns the user identified by the given username.
 // It returns a reference to the user instance and an error if unsuccessful.
-func (data *DataSource) GetUserByName(name string) (*User, error) {
+func (data *DataSource) UserByName(name string) (*User, error) {
 	var user User
 	data.db.Where("name = ?", name).First(&user)
 	if user.Name != name {
@@ -302,35 +302,35 @@ func (data *DataSource) ValidateEmail(email string) bool {
 	return false
 }
 
-// GetPostsByUser retrieves the posts by the given user.
+// PostsByUser retrieves the posts by the given user.
 // It returns the slice of posts and an error if something unexpected occurs.
-func (data *DataSource) GetPostsByUser(user uint) ([]Post, error) {
+func (data *DataSource) PostsByUser(user uint) ([]Post, error) {
 	var posts []Post
 	data.db.Where("user_id = ?", user).Find(&posts)
 	return posts, nil
 }
 
-// GetRecentPosts fetches the most recent posts.
+// RecentPosts fetches the most recent posts.
 // It takes the maximum number of posts to fetch as a parameter.
 // It returns the slice of posts sorted and an error if something unexpected occurs.
-func (data *DataSource) GetRecentPosts(count int) ([]Post, error) {
+func (data *DataSource) RecentPosts(count int) ([]Post, error) {
 	var posts []Post
 	data.db.Order("created_at DESC").Limit(count).Find(&posts)
 	return posts, nil
 }
 
-// GetRecentUsers fetches the most recent users.
+// RecentUsers fetches the most recent users.
 // It takes the maximum number of users to fetch as a parameter.
 // It returns the slice of users in descending order and an error if something unexpected occurs.
-func (data *DataSource) GetRecentUsers(count int) ([]User, error) {
+func (data *DataSource) RecentUsers(count int) ([]User, error) {
 	var users []User
 	data.db.Order("created_at DESC").Limit(count).Find(&users)
 	return users, nil
 }
 
-// SetBiography changes the biography of the given user.
+// UpdateBiography changes the biography of the given user.
 // It returns an error if the biography is not valid or the user does not exist.
-func (data *DataSource) SetBiography(id uint, biography string) error {
+func (data *DataSource) UpdateBiography(id uint, biography string) error {
 	if !data.ValidateBiography(biography) {
 		return errValidation
 	}
@@ -374,9 +374,9 @@ func (data *DataSource) AddPost(author uint, title, content string) (uint, error
 	return post.ID, nil
 }
 
-// GetPost returns the post identified by the given unique ID.
+// Post returns the post identified by the given unique ID.
 // It returns the post and an error if the ID does not exist.
-func (data *DataSource) GetPost(id uint) (*Post, error) {
+func (data *DataSource) Post(id uint) (*Post, error) {
 	var post Post
 	data.db.First(&post, id)
 	if post.ID != id {
@@ -385,17 +385,17 @@ func (data *DataSource) GetPost(id uint) (*Post, error) {
 	return &post, nil
 }
 
-// GetCommentsOn returns the comments on the given post.
+// CommentsOn returns the comments on the given post.
 // It returns the slice of posts and never an error.
-func (data *DataSource) GetCommentsOn(id uint) ([]Post, error) {
+func (data *DataSource) CommentsOn(id uint) ([]Post, error) {
 	var comments []Post
 	data.db.Where("parent_id = ?", id).Find(&comments)
 	return comments, nil
 }
 
-// GetIdentities retrieves the identities associated with the given user.
+// Identities retrieves the identities associated with the given user.
 // It returns a slice of identities and an error if no identity can be found.
-func (data *DataSource) GetIdentities(user uint) ([]Identity, error) {
+func (data *DataSource) Identities(user uint) ([]Identity, error) {
 	var identities []Identity
 	data.db.Where("user_id = ?", user).Find(&identities)
 	if len(identities) == 0 {
@@ -404,9 +404,9 @@ func (data *DataSource) GetIdentities(user uint) ([]Identity, error) {
 	return identities, nil
 }
 
-// GetIdentityByEmail retrieves the identity associated with the given email.
+// IdentityByEmail retrieves the identity associated with the given email.
 // It returns the identity and an error if no identity can be found.
-func (data *DataSource) GetIdentityByEmail(email string) (*Identity, error) {
+func (data *DataSource) IdentityByEmail(email string) (*Identity, error) {
 	var identity Identity
 	data.db.Where("email = ?", email).First(&identity)
 	if identity.Email != email {
@@ -431,17 +431,17 @@ func (data *DataSource) ConfirmIdentity(user uint, email string) error {
 	return nil
 }
 
-// GetNumberOfLikes retrieves the number of likes a post has received.
+// NumberOfLikes retrieves the number of likes a post has received.
 // It returns the count and an error if something unexpected occurs.
-func (data *DataSource) GetNumberOfLikes(id uint) (int, error) {
+func (data *DataSource) NumberOfLikes(id uint) (int, error) {
 	var count int
 	data.db.Model(&Like{}).Where("post_id = ?", id).Count(&count)
 	return count, nil
 }
 
-// GetLikes retrieves the likes of a user.
+// Likes retrieves the likes of a user.
 // It returns a slice of likes and an error if something unexpected occurs.
-func (data *DataSource) GetLikes(id uint) ([]Like, error) {
+func (data *DataSource) Likes(id uint) ([]Like, error) {
 	var likes []Like
 	data.db.Where("user_id = ?", id).Find(&likes)
 	return likes, nil
@@ -484,17 +484,10 @@ WHERE deleted_at IS NULL AND created_at > ?
 ORDER BY ranking.votes DESC, created_at DESC
 LIMIT ?`
 
-// GetLikedPosts returns the posts created since the given time ranked by their vote count.
+// PopularPosts returns the posts created since the given time ranked by their vote count.
 // It returns the slice of posts
-func (data *DataSource) GetLikedPosts(since time.Time, count int) ([]Post, error) {
+func (data *DataSource) PopularPosts(since time.Time, count int) ([]Post, error) {
 	var posts []Post
 	data.db.Raw(rankingQuery, since, count).Scan(&posts)
 	return posts, nil
-}
-
-// GetLikeCount returns the number of likes the post has received.
-func (data *DataSource) GetLikeCount(post uint) int {
-	var count int
-	data.db.Model(&Like{}).Where("post_id = ?", post).Count(&count)
-	return count
 }
