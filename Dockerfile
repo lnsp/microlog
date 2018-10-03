@@ -3,5 +3,5 @@ LABEL maintainer="lennart@espe.tech"
 RUN mkdir -p /app
 ADD . /app
 WORKDIR /app
-RUN go build -o microlog ./cmd/microlog
+RUN go build -o microlog ./
 CMD [ "/app/microlog" ]
