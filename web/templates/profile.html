@@ -2,29 +2,33 @@
 <h1 class="profile-name">{{ .Name }}</small></h1>
 {{ if .Biography }}
 <div class="profile-biography">
-    <h3>Biography</h3>
+    <h3>
+        Biography
     {{ if .Self }}
-    <a href="/profile/edit">edit</a>
+    <small><a href="/profile/edit">edit</a></small>
     {{ end }}
+    </h3>
     <p>{{ .Biography }}</p>
 </div>
 {{ end }}
 {{ if .Self }}
 <div class="profile-settings">
-    <h4>Settings</h4>
+    <h3>Settings</h3>
     <ul class="item-listing">
         <li><a href="/auth/forgot">reset password</a></li>
         <li><a href="/auth/delete">delete account</a></li>
     </ul>
 </div>
 {{ end }}
-<hr>
-<ul class="item-listing">
-    {{ range .Posts }}
-    <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a><br><small>on {{ .Date }}</small></li>
-    {{ else }}
-    This user has not published any posts yet.
-    {{ end }}
-</ul>
+<div class="profile-posts">
+    <h3>Publications</h3>
+    <ul class="item-listing">
+        {{ range .Posts }}
+        <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a><br><small>on {{ .Date }}</small></li>
+        {{ else }}
+        This user has not published any posts yet.
+        {{ end }}
+    </ul>
+</div>
 {{ end }}
 {{ define "title" }}Profile of {{ .Name }}{{ end }}
