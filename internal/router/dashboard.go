@@ -19,17 +19,47 @@ type dashboardUser struct {
 	Name, MemberSince string
 }
 
-type dashboardContext struct {
-	Context
-	PopularPosts []dashboardPost
-	LatestUsers  []dashboardUser
+type dashboardOption struct {
+	Name   string
+	Active bool
 }
 
+type dashboardContext struct {
+	Context
+	PopularPosts   []dashboardPost
+	LatestUsers    []dashboardUser
+	PopularOptions []dashboardOption
+}
+
+const (
+	timeWeek  = time.Hour * 24 * 7
+	timeMonth = timeWeek * 4
+	timeYear  = timeMonth * 12
+)
+
 func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
-	ctx := dashboardContext{
+	ctx := &dashboardContext{
 		Context: *router.defaultContext(r),
 	}
-	popularPosts, err := router.Data.PopularPosts(time.Now().Add(-time.Hour*24*7), dashboardPostsLimit)
+	var timeInterval time.Duration
+	switch r.URL.Query().Get("popular") {
+	case "month":
+		timeInterval = -timeMonth
+		ctx.PopularOptions = []dashboardOption{
+			{"week", false}, {"month", true}, {"year", false},
+		}
+	case "year":
+		timeInterval = -timeYear
+		ctx.PopularOptions = []dashboardOption{
+			{"week", false}, {"month", false}, {"year", true},
+		}
+	default:
+		timeInterval = -timeWeek
+		ctx.PopularOptions = []dashboardOption{
+			{"week", true}, {"month", false}, {"year", false},
+		}
+	}
+	popularPosts, err := router.Data.PopularPosts(time.Now().Add(timeInterval), dashboardPostsLimit)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"id":   ctx.UserID,
@@ -82,7 +112,7 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 			MemberSince: humanize.Time(user.CreatedAt),
 		}
 	}
-	return &ctx
+	return ctx
 }
 
 func (router *Router) dashboard(w http.ResponseWriter, r *http.Request) {

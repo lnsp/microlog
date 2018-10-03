@@ -1,6 +1,16 @@
 {{ define "content" }}
 <div class="dashboard-group">
-<h2>Popular posts</h2>
+<h2>
+    Popular posts
+    <small class="dashboard-options">
+        this
+        {{ range .PopularOptions }}
+        <a href="/?popular={{ .Name }}" {{ if .Active }}class="active"{{ end }}>
+            {{ .Name }}
+        </a>
+        {{ end }}
+    </small>
+</h2>
 <ul class="item-listing">
     {{ range .PopularPosts }}
     <li class="item-flex">
