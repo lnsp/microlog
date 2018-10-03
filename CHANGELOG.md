@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ## 2018-10-03
+### Added
+- Dashboard view now supports selection of interval for popular posts
+
 ### Changed
 - Profile view now uses a more consistent visual language
 
