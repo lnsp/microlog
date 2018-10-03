@@ -1,9 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2018-10-03
+### Changed
+- Profile view now uses a more consistent visual language
+
 ## 2018-09-23
 ### Added
 - New logo resembling typographic redesign
+
 ### Changed
 - Improved typography across the site
 
