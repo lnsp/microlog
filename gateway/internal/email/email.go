@@ -61,7 +61,7 @@ func (email *Client) SendConfirmation(userID uint, emailAddr string) error {
 		Email: emailAddr,
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to send confirmation")
+		return errors.Wrapf(err, "failed to send confirmation: %v", resp)
 	}
 	return nil
 }
@@ -83,7 +83,7 @@ func (email *Client) SendPasswordReset(userID uint, emailAddr string) error {
 		Email: emailAddr,
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to send password reset")
+		return errors.Wrapf(err, "failed to send password reset: %v", resp)
 	}
 	return nil
 }
