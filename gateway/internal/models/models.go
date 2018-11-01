@@ -2,6 +2,7 @@
 package models
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"time"
@@ -484,7 +485,7 @@ LEFT JOIN (
 	WHERE deleted_at IS NULL GROUP BY post_id)
 AS ranking
 ON posts.id = ranking.post_id
-WHERE deleted_at IS NULL AND created_at::date > ?
+WHERE deleted_at IS NULL AND created_at::date > date '%s'
 ORDER BY ranking.votes ASC, created_at DESC
 LIMIT ?`
 
@@ -492,6 +493,6 @@ LIMIT ?`
 // It returns the slice of posts
 func (data *DataSource) PopularPosts(since time.Time, count int) ([]Post, error) {
 	var posts []Post
-	data.db.Raw(rankingQuery, "date '" + since.Format("2006-01-02") + "'", count).Scan(&posts)
+	data.db.Raw(fmt.Sprintf(rankingQuery, since.Format("2006-01-02")), count).Scan(&posts)
 	return posts, nil
 }
