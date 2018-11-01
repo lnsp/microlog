@@ -1,7 +1,6 @@
-module github.com/lnsp/microlog
+module github.com/lnsp/microlog/gateway
 
 require (
-	cloud.google.com/go v0.26.0 // indirect
 	github.com/Sirupsen/logrus v1.0.6
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -11,7 +10,6 @@ require (
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/go-sql-driver/mysql v1.4.0 // indirect
-	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2
@@ -37,11 +35,7 @@ require (
 	github.com/tdewolff/parse v2.3.3+incompatible // indirect
 	github.com/tdewolff/test v0.0.0-20171106182207-265427085153 // indirect
 	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
-	golang.org/x/net v0.0.0-20180821023952-922f4815f713 // indirect
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
-	golang.org/x/sys v0.0.0-20180821140842-3b58ed4ad339 // indirect
-	golang.org/x/text v0.3.0 // indirect
-	google.golang.org/appengine v1.1.0 // indirect
+	google.golang.org/grpc v1.16.0
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect

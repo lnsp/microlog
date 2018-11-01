@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/lnsp/microlog/internal/tokens"
-	"github.com/lnsp/microlog/internal/utils"
+	"github.com/lnsp/microlog/gateway/pkg/tokens"
+	"github.com/lnsp/microlog/gateway/pkg/utils"
 )
 
 type emailContext struct {
@@ -42,13 +42,13 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 
 func (router *Router) confirm(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	email, userID, ok := tokens.VerifyEmailToken(router.EmailSecret, token, tokens.PurposeConfirmation)
+	email, userID, err := router.EmailClient.Verify(token, tokens.PurposeConfirmation)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
 	}
-	if !ok {
-		log.WithFields(logrus.Fields{
+	if err != nil {
+		log.WithError(err).WithFields(logrus.Fields{
 			"token": token,
 			"addr":  utils.RemoteHost(r),
 			"type":  "invalid token",
@@ -92,7 +92,7 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	id, err := router.Data.IdentityByEmail(email)
 	if err == nil && id.Confirmed {
-		if err := router.EmailClient.SendPasswordReset(id.UserID, email, router.PublicAddress+resetURLFormat); err != nil {
+		if err := router.EmailClient.SendPasswordReset(id.UserID, email); err != nil {
 			ctx.Success = false
 			ctx.ErrorMessage = "Unexpected internal error, please try again."
 			log.WithFields(logrus.Fields{
@@ -125,12 +125,12 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) reset(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	_, _, ok := tokens.VerifyEmailToken(router.EmailSecret, token, tokens.PurposeReset)
+	_, _, err := router.EmailClient.Verify(token, tokens.PurposeReset)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
 	}
-	if !ok {
+	if err != nil {
 		router.render(resetTemplate, w, ctx)
 		return
 	}
@@ -140,13 +140,13 @@ func (router *Router) reset(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) resetSubmit(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	email, userID, ok := tokens.VerifyEmailToken(router.EmailSecret, token, tokens.PurposeReset)
+	email, userID, err := router.EmailClient.Verify(token, tokens.PurposeReset)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
 	}
-	if !ok {
-		log.WithFields(logrus.Fields{
+	if err != nil {
+		log.WithError(err).WithFields(logrus.Fields{
 			"token": token,
 			"addr":  utils.RemoteHost(r),
 			"type":  "invalid token",
@@ -342,7 +342,7 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := router.EmailClient.SendConfirmation(userID, email, router.PublicAddress+confirmURLFormat); err != nil {
+	if err := router.EmailClient.SendConfirmation(userID, email); err != nil {
 		ctx.ErrorMessage = "Internal error occured, please try again."
 		router.render(signupTemplate, w, ctx)
 		return

@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package api;
+
+service MailService {
+    rpc SendConfirmation(MailRequest) returns (MailResponse) {}
+    rpc SendPasswordReset(MailRequest) returns (MailResponse) {}
+    rpc VerifyToken(VerificationRequest) returns (VerificationResponse) {}
+}
+
+message VerificationRequest {
+    string token = 1;
+    enum Purpose {
+        CONFIRMATION = 0;
+        PASSWORD_RESET = 1;
+    }
+    Purpose purpose = 2;
+}
+
+message VerificationResponse {
+    string email = 1;
+    uint32 userID = 2;
+}
+
+message MailRequest {
+    string email = 1;
+    string name = 2;
+    uint32 userID = 3;
+}
+
+message MailResponse {
+    string status = 1;
+    int32 code = 2;
+}

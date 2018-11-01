@@ -8,8 +8,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
-	"github.com/lnsp/microlog/internal/email"
-	"github.com/lnsp/microlog/internal/models"
+	"github.com/lnsp/microlog/gateway/internal/email"
+	"github.com/lnsp/microlog/gateway/internal/models"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/css"
 	"github.com/tdewolff/minify/html"

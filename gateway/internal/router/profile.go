@@ -5,7 +5,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
-	"github.com/lnsp/microlog/internal/utils"
+	"github.com/lnsp/microlog/gateway/pkg/utils"
 )
 
 type profilePost struct {

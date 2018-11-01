@@ -8,10 +8,10 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
 
-	"github.com/lnsp/microlog/internal/email"
-	"github.com/lnsp/microlog/internal/models"
-	"github.com/lnsp/microlog/internal/router"
-	"github.com/lnsp/microlog/internal/utils"
+	"github.com/lnsp/microlog/gateway/internal/email"
+	"github.com/lnsp/microlog/gateway/internal/models"
+	"github.com/lnsp/microlog/gateway/internal/router"
+	"github.com/lnsp/microlog/gateway/pkg/utils"
 )
 
 var log = &logrus.Logger{

@@ -7,7 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	humanize "github.com/dustin/go-humanize"
-	"github.com/lnsp/microlog/internal/utils"
+	"github.com/lnsp/microlog/gateway/pkg/utils"
 )
 
 type dashboardPost struct {

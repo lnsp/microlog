@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lnsp/microlog/internal/models"
-	"github.com/lnsp/microlog/internal/tokens"
+	"github.com/lnsp/microlog/gateway/internal/models"
+	"github.com/lnsp/microlog/gateway/pkg/tokens"
 	"github.com/micro/cli"
 )
 

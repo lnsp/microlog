@@ -1,9 +1,9 @@
 version: '3.5'
 services:
   web:
-    build: .
+    build: gateway/.
     ports:
-    - "127.0.0.1:8080:8080"
+    - "80:80"
     volumes:
     - ./micro.db:/app/micro.db
     env_file:
