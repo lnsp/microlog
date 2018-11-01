@@ -476,17 +476,17 @@ FROM posts
 LEFT JOIN (
 	SELECT post_id, COUNT(*) as votes
 	FROM likes
-	WHERE deleted_at IS NULL GROUP BY user_id)
+	WHERE deleted_at IS NULL GROUP BY post_id)
 AS ranking
 ON posts.id = ranking.post_id
-WHERE deleted_at IS NULL AND created_at > ?
-ORDER BY ranking.votes DESC, created_at DESC
+WHERE deleted_at IS NULL AND created_at::date > ?
+ORDER BY ranking.votes ASC, created_at DESC
 LIMIT ?`
 
 // PopularPosts returns the posts created since the given time ranked by their vote count.
 // It returns the slice of posts
 func (data *DataSource) PopularPosts(since time.Time, count int) ([]Post, error) {
 	var posts []Post
-	data.db.Raw(rankingQuery, since, count).Scan(&posts)
+	data.db.Raw(rankingQuery, "date '" + since.Format("2006-01-02") + "'", count).Scan(&posts)
 	return posts, nil
 }
