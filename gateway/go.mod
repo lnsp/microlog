@@ -2,7 +2,6 @@ module github.com/lnsp/microlog/gateway
 
 require (
 	github.com/Sirupsen/logrus v1.0.6
-	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20180707235734-242fa5aa1b45 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -27,8 +26,6 @@ require (
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday v1.5.1
-	github.com/sendgrid/rest v2.4.1+incompatible // indirect
-	github.com/sendgrid/sendgrid-go v3.4.1+incompatible
 	github.com/sirupsen/logrus v1.0.6 // indirect
 	github.com/stretchr/testify v1.2.2 // indirect
 	github.com/tdewolff/minify v2.3.5+incompatible

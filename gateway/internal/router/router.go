@@ -20,8 +20,6 @@ import (
 )
 
 const (
-	confirmURLFormat    = "/auth/confirm?token=%s"
-	resetURLFormat      = "/auth/reset?token=%s"
 	timeFormat          = "Monday, 2. January at 15:04"
 	sessionCookieName   = "session_token"
 	dashboardPostsLimit = 5
@@ -58,7 +56,6 @@ var (
 type Config struct {
 	SessionSecret []byte
 	EmailClient   *email.Client
-	EmailSecret   []byte
 	DataSource    *models.DataSource
 	PublicAddress string
 	Minify        bool
@@ -68,7 +65,6 @@ func New(cfg Config) http.Handler {
 	router := &Router{
 		Data:          cfg.DataSource,
 		SessionSecret: cfg.SessionSecret,
-		EmailSecret:   cfg.EmailSecret,
 		EmailClient:   cfg.EmailClient,
 		PublicAddress: cfg.PublicAddress,
 	}

@@ -26,9 +26,8 @@ type specification struct {
 	Addr        string `default:":8080" desc:"Address the server is listening on"`
 	Datasource  string `required:"true" desc:"Database file name"`
 	Session     string `default:"secret" desc:"Shared session token secret"`
-	Email       string `default:"secret" desc:"Shared email token secret"`
-	SendgridKey string `envconfig:"SENDGRID_API_KEY" default:"" desc:"SendGrid API Key"`
 	Minify      bool   `default:"false" desc:"Minify all responses"`
+	EmailService string `default:"mail" desc:"Email service host"`
 }
 
 func main() {
@@ -45,8 +44,7 @@ func main() {
 	}
 	handler := router.New(router.Config{
 		SessionSecret: []byte(spec.Session),
-		EmailSecret:   []byte(spec.Email),
-		EmailClient:   email.NewClient(dataSource, []byte(spec.Email), spec.SendgridKey),
+		EmailClient:   email.NewClient(dataSource, spec.EmailService),
 		DataSource:    dataSource,
 		PublicAddress: spec.PublicAddr,
 		Minify:        true,

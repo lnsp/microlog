@@ -11,14 +11,12 @@ import (
 
 type Client struct {
 	data   *models.DataSource
-	secret []byte
 	service string
 }
 
-func NewClient(dataSource *models.DataSource, tokenSecret []byte, mailService string) *Client {
+func NewClient(dataSource *models.DataSource, mailService string) *Client {
 	return &Client{
 		data:   dataSource,
-		secret: tokenSecret,
 		service: mailService,
 	}
 }
