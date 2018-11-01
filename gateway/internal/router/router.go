@@ -51,6 +51,7 @@ var (
 	changelogTemplate      = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/changelog.html"))
 	termsOfServiceTemplate = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/legal/terms-of-service.html"))
 	privacyPolicyTemplate  = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/legal/privacy-policy.html"))
+	moderationTemplate     = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/moderation.html"))
 )
 
 type Config struct {
@@ -91,6 +92,9 @@ func New(cfg Config) http.Handler {
 	serveMux.HandleFunc("/post", router.postSubmit).Methods("POST")
 	serveMux.HandleFunc("/legal/privacy-policy", router.privacyPolicy).Methods("GET")
 	serveMux.HandleFunc("/legal/terms-of-service", router.termsOfService).Methods("GET")
+	serveMux.HandleFunc("/moderate", router.Moderate).Methods("GET")
+	serveMux.HandleFunc("/moderate/delete/{report}", router.ModerateDelete).Methods("GET")
+	serveMux.HandleFunc("/moderate/close/{report}", router.ModerateClose).Methods("GET")
 	serveMux.HandleFunc("/{user}", router.profile).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}", router.postRedirect).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/", router.post).Methods("GET")
@@ -119,6 +123,7 @@ type Context struct {
 	HeadControls bool
 	SignedIn     bool
 	UserID       uint
+	Moderator    bool
 }
 
 type Router struct {

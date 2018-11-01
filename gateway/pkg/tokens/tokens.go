@@ -59,28 +59,30 @@ func VerifyEmailToken(secret []byte, signedToken string, purpose EmailPurpose) (
 
 type SessionClaims struct {
 	jwt.StandardClaims
-	Username string
-	ID       uint
+	Username  string
+	ID        uint
+	Moderator bool
 }
 
-func VerifySessionToken(secret []byte, signedToken string) (string, uint, bool) {
+func VerifySessionToken(secret []byte, signedToken string) (string, uint, bool, bool) {
 	var claims SessionClaims
 	_, err := jwt.ParseWithClaims(signedToken, &claims, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
 	})
 	if err != nil {
-		return "", 0, false
+		return "", 0, false, false
 	}
-	return claims.Username, claims.ID, true
+	return claims.Username, claims.ID, claims.Moderator, true
 }
 
-func CreateSessionToken(secret []byte, name string, id uint) (string, error) {
+func CreateSessionToken(secret []byte, name string, id uint, mod bool) (string, error) {
 	claims := SessionClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(sessionExpiresAfter).Unix(),
 		},
-		Username: name,
-		ID:       id,
+		Username:  name,
+		ID:        id,
+		Moderator: mod,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
 	signedToken, err := token.SignedString(secret)

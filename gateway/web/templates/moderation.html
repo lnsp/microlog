@@ -1,0 +1,48 @@
+{{ define "content" }}
+<style>
+    table {
+        border-collapse: collapse;
+        border-color: #822;
+        width: 100%;
+    }
+    table, tr, td {
+        border: 1px solid #822;
+    }
+    thead {
+        padding: 0.5em;
+    }
+    td {
+        padding: 0.25em 0.5em;
+    }
+</style>
+<table>
+<thead>
+<tr>
+    <th>#</th>
+    <th>User</th>
+    <th>Title</th>
+    <th>Reason</th>
+    <th>Reporter</th>
+    <th>Status</th>
+    <th>Actions</th>
+</tr>
+</thead>
+<tbody>
+{{ range .Reports }}
+<tr>
+    <td>{{ .ID }}</td>
+    <td><a href="/{{ .PostUser }}">{{ .PostUser }}</a></td>
+    <td><a href="/{{ .PostUser }}/{{ .PostID }}">{{ .PostTitle }}</a></td>
+    <td>{{ .Reason }}</td>
+    <td><a href="/{{ .Reporter }}">{{ .Reporter }}</a></td>
+    <td>{{ if .Status }}open{{ else }}closed{{ end }}</td>
+    <td>
+        <a href="/moderate/delete/{{ .ID }}">delete</a>
+        <a href="/moderate/close/{{ .ID }}">close</a>
+    </td>
+</tr>
+{{ end }}
+</tbody>
+</table>
+{{ end }}
+{{ define "title" }}Moderate{{ end }}

@@ -22,7 +22,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 			HeadControls: true,
 		}
 	}
-	_, uid, ok := tokens.VerifySessionToken(router.SessionSecret, sessionCookie.Value)
+	_, uid, mod, ok := tokens.VerifySessionToken(router.SessionSecret, sessionCookie.Value)
 	if !ok {
 		log.WithFields(logrus.Fields{
 			"token": sessionCookie.Value,
@@ -37,6 +37,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 		SignedIn:     true,
 		UserID:       uid,
 		HeadControls: true,
+		Moderator:    mod,
 	}
 }
 
@@ -241,7 +242,7 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 		router.render(loginTemplate, w, ctx)
 		return
 	}
-	token, err := tokens.CreateSessionToken(router.SessionSecret, user.Name, user.ID)
+	token, err := tokens.CreateSessionToken(router.SessionSecret, user.Name, user.ID, user.Moderator)
 	if err != nil {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "Unexpected internal error, please try again."
@@ -339,8 +340,8 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ctx.ErrorMessage = "Internal error occurred, please try again."
 		log.WithError(err).WithFields(logrus.Fields{
-			"name": name,
-			"email": email,
+			"name":   name,
+			"email":  email,
 			"userID": userID,
 		}).Error("failed to add user")
 		router.render(signupTemplate, w, ctx)
@@ -350,9 +351,9 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 	if err := router.EmailClient.SendConfirmation(userID, email); err != nil {
 		ctx.ErrorMessage = "Internal error occurred, please try again."
 		log.WithError(err).WithFields(logrus.Fields{
-			"name": name,
+			"name":   name,
 			"userID": userID,
-			"email": email,
+			"email":  email,
 		}).Error("failed to send confirmation email")
 		router.render(signupTemplate, w, ctx)
 		return

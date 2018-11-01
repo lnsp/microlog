@@ -203,6 +203,9 @@
             {{ if .HeadControls }}
             <div>
                 <a class="button" href="/post">New Post</a>
+                {{ if .Moderator }}
+                <a class="nav-item" href="/moderate">Moderate</a>
+                {{ end}}
                 {{ if .SignedIn }}
                 <a class="nav-item" href="/profile">Profile</a>
                 <a class="nav-item" href="/auth/logout">Logout</a>

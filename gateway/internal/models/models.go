@@ -16,10 +16,10 @@ import (
 )
 
 const (
-	postTitleMinLength = 3
+	postTitleMinLength    = 3
 	postTitleMaxLength    = 80
 	postContentMaxLength  = 80000
-	postContentMinLength = 10
+	postContentMinLength  = 10
 	reportReasonMaxLength = 240
 	usernameMaxLength     = 24
 	biographyMaxLength    = 240
@@ -36,7 +36,7 @@ var (
 
 var (
 	unavailableNames = []string{
-		"microlog", "legal", "auth", "changelog", "profile", "post", "explore",
+		"microlog", "legal", "auth", "changelog", "profile", "post", "explore", "moderate", "admin",
 	}
 )
 
@@ -45,7 +45,7 @@ type User struct {
 	gorm.Model
 	Name       string
 	Biography  string
-	Admin      bool
+	Moderator  bool
 	Posts      []Post     `gorm:"foreignkey:UserID"`
 	Identities []Identity `gorm:"foreignkey:UserID"`
 	Likes      []Like     `gorm:"foreignkey:UserID"`
@@ -66,6 +66,7 @@ type Report struct {
 	PostID     uint
 	ReporterID uint
 	Reason     string
+	Open       bool
 }
 
 // Post stores the title, content and author of a post.
@@ -213,12 +214,33 @@ func (data *DataSource) AddReport(postID, reporterID uint, reason string) error 
 		PostID:     postID,
 		ReporterID: reporterID,
 		Reason:     reason,
+		Open:       true,
 	}
 	data.db.Create(&report)
 	return nil
 }
 
-// EmailExists checks if the email already is used by anotherr identity.
+func (data *DataSource) Report(id uint) (*Report, error) {
+	var report Report
+	data.db.First(&report, id)
+	if report.ID != id {
+		return nil, errors.New("could not find report")
+	}
+	return &report, nil
+}
+
+func (data *DataSource) CloseReport(id uint) error {
+	data.db.Model(&Report{}).Where("id = ?", id).Update("open", "false")
+	return nil
+}
+
+func (data *DataSource) Reports() ([]Report, error) {
+	var reports []Report
+	data.db.Find(&reports, "open = ?", "true")
+	return reports, nil
+}
+
+// EmailExists checks if the email already is used by another identity.
 func (data *DataSource) EmailExists(email string) bool {
 	var count int
 	data.db.Model(&Identity{}).Where("email = ?", email).Count(&count)
