@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2018-11-01
+### Changed
+- Post titles now have a minimum length of 3 characters, while post content must be at least 10 characters
+
 ## 2018-10-03
 ### Added
 - Dashboard view now supports selection of interval for popular posts
