@@ -15,4 +15,5 @@ FROM scratch
 ADD ./gateway/web /app/web
 COPY --from=builder /go/bin/gateway /app/gateway
 
+WORKDIR /app
 ENTRYPOINT ["/app/gateway"]

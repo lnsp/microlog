@@ -11,8 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 
-	// need sqlite3 context for gorm
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 const (
@@ -99,9 +98,9 @@ var log = &logrus.Logger{
 func Open(path string) (*DataSource, error) {
 	log.WithFields(logrus.Fields{
 		"path": path,
-		"type": "sqlite3",
+		"type": "postgres",
 	}).Info("accessing database")
-	db, err := gorm.Open("sqlite3", path)
+	db, err := gorm.Open("postgres", path)
 	db.SetLogger(log)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create data source")

@@ -5,16 +5,25 @@ services:
       context: .
       dockerfile: mail/Dockerfile
     ports:
-    - "8080"
+      - "8080"
     env_file:
-    - .env.prod
+      - .env.prod
+  web_db:
+    image: postgres
+    volumes:
+      - /var/lib/postgresql/data
+    env_file:
+      - .env.prod
   web:
     build:
       context: .
       dockerfile: gateway/Dockerfile
+    depends_on:
+      - web_db
+    restart: always
     ports:
-    - "80:8080"
+      - "80:8080"
     volumes:
-    - ./micro.db:/app/micro.db
+      - ./micro.db:/app/micro.db
     env_file:
-    - .env.prod
+      - .env.prod

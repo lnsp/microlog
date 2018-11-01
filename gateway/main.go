@@ -38,7 +38,7 @@ func main() {
 	}
 	dataSource, err := models.Open(spec.Datasource)
 	if err != nil {
-		log.WithFields(logrus.Fields{
+		log.WithError(err).WithFields(logrus.Fields{
 			"datasource": spec.Datasource,
 		}).Fatal("failed to open data source")
 	}
