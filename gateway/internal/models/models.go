@@ -15,8 +15,10 @@ import (
 )
 
 const (
+	postTitleMinLength = 3
 	postTitleMaxLength    = 80
 	postContentMaxLength  = 80000
+	postContentMinLength = 10
 	reportReasonMaxLength = 240
 	usernameMaxLength     = 24
 	biographyMaxLength    = 240
@@ -144,6 +146,9 @@ func (data *DataSource) HasUser(email string, password []byte) (uint, bool, erro
 // This action can only be applied to posts owned by the given user ID.
 // It returns any error if the action is unsuccessful.
 func (data *DataSource) UpdatePost(userID, postID uint, title, content string) error {
+	if !data.ValidatePostTitle(title) || !data.ValidatePostContent(content) {
+		return errValidation
+	}
 	var post Post
 	data.db.First(&post, postID)
 	if post.ID != postID {
@@ -350,12 +355,12 @@ func (data *DataSource) ValidateBiography(biography string) bool {
 
 // ValidatePostTitle checks if the post title is valid.
 func (data *DataSource) ValidatePostTitle(title string) bool {
-	return len(title) <= postTitleMaxLength
+	return postTitleMinLength <= len(title) && len(title) <= postTitleMaxLength
 }
 
 // ValidatePostContent checks if the post content is valid.
 func (data *DataSource) ValidatePostContent(content string) bool {
-	return len(content) <= postContentMaxLength
+	return postContentMinLength <= len(content) && len(content) <= postContentMaxLength
 }
 
 // AddPost creates a new post by the given user and with the given title and content.
