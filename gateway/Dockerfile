@@ -13,7 +13,7 @@ RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 # Copy into scratch image
 FROM scratch
 ADD ./gateway/web /app/web
+ADD ./CHANGELOG.md /app/CHANGELOG.md
 COPY --from=builder /go/bin/gateway /app/gateway
-
 WORKDIR /app
 ENTRYPOINT ["/app/gateway"]

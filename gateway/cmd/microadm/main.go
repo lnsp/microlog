@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lnsp/microlog/gateway/internal/models"
 	"github.com/lnsp/microlog/gateway/pkg/tokens"
 	"github.com/micro/cli"
 )
@@ -48,6 +47,7 @@ func main() {
 }
 
 func getEmailToken(ctx *cli.Context) {
+	/*
 	dataSource, err := models.Open(ctx.GlobalString("data"))
 	if err != nil {
 		fmt.Println("failed to open data source:", err)
@@ -59,8 +59,9 @@ func getEmailToken(ctx *cli.Context) {
 		fmt.Println("user does not exist:", err)
 		return
 	}
+	*/
 	addr := ctx.String("address")
-	token, err := tokens.CreateEmailToken([]byte(ctx.GlobalString("secret")), addr, user.ID, tokens.PurposeConfirmation)
+	token, err := tokens.CreateEmailToken([]byte(ctx.GlobalString("secret")), addr, 1, tokens.PurposeConfirmation)
 	if err != nil {
 		fmt.Println("failed to create email token:", err)
 		return
