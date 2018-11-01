@@ -58,7 +58,7 @@ func (s *MailServer) VerifyToken(ctx context.Context, req *api.VerificationReque
 }
 
 func (s *MailServer) SendConfirmation(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
-	token, err := tokens.CreateEmailToken(s.secret, req.Email, uint(req.UserID), tokens.PurposeReset)
+	token, err := tokens.CreateEmailToken(s.secret, req.Email, uint(req.UserID), tokens.PurposeConfirmation)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create token")
 	}
@@ -86,7 +86,7 @@ func (s *MailServer) SendConfirmation(ctx context.Context, req *api.MailRequest)
 }
 
 func (s *MailServer) SendPasswordReset(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
-	token, err := tokens.CreateEmailToken(s.secret, req.Email, uint(req.UserID), tokens.PurposeConfirmation)
+	token, err := tokens.CreateEmailToken(s.secret, req.Email, uint(req.UserID), tokens.PurposeReset)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create token")
 	}
