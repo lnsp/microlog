@@ -22,7 +22,7 @@ func NewClient(dataSource *models.DataSource, mailService string) *Client {
 }
 
 func (email *Client) Verify(token string, purpose tokens.EmailPurpose) (string, uint, error) {
-	conn, err := grpc.Dial(email.service)
+	conn, err := grpc.Dial(email.service, grpc.WithInsecure())
 	if err != nil {
 		return "", 0, errors.Wrap(err, "failed to dial mail service")
 	}
@@ -49,7 +49,7 @@ func (email *Client) SendConfirmation(userID uint, emailAddr string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to find user")
 	}
-	conn, err := grpc.Dial(email.service)
+	conn, err := grpc.Dial(email.service, grpc.WithInsecure())
 	if err != nil {
 		return errors.Wrap(err, "failed to dial mail service")
 	}
@@ -71,7 +71,7 @@ func (email *Client) SendPasswordReset(userID uint, emailAddr string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to find user")
 	}
-	conn, err := grpc.Dial(email.service)
+	conn, err := grpc.Dial(email.service, grpc.WithInsecure())
 	if err != nil {
 		return errors.Wrap(err, "failed to dial mail service")
 	}

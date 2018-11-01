@@ -14,5 +14,5 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 FROM golang:alpine
 ADD ./mail/templates /app/templates
 COPY --from=builder /go/bin/mail /app/mail
-
+EXPOSE 8080
 ENTRYPOINT ["/app/mail"]

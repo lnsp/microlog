@@ -337,13 +337,23 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := router.Data.AddUser(name, email, []byte(password))
 	if err != nil {
-		ctx.ErrorMessage = "Internal error occured, please try again."
+		ctx.ErrorMessage = "Internal error occurred, please try again."
+		log.WithError(err).WithFields(logrus.Fields{
+			"name": name,
+			"email": email,
+			"userID": userID,
+		}).Error("failed to add user")
 		router.render(signupTemplate, w, ctx)
 		return
 	}
 
 	if err := router.EmailClient.SendConfirmation(userID, email); err != nil {
-		ctx.ErrorMessage = "Internal error occured, please try again."
+		ctx.ErrorMessage = "Internal error occurred, please try again."
+		log.WithError(err).WithFields(logrus.Fields{
+			"name": name,
+			"userID": userID,
+			"email": email,
+		}).Error("failed to send confirmation email")
 		router.render(signupTemplate, w, ctx)
 		return
 	}
