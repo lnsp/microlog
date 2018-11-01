@@ -3,3 +3,4 @@ micro.db
 sendgrid.env
 .env
 .env.*
+.ssh/

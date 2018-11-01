@@ -1,13 +1,17 @@
 version: '3.5'
 services:
   mail:
-    build: mail/.
+    build:
+      context: .
+      dockerfile: mail/Dockerfile
     ports:
     - "8080"
     env_file:
     - .env.prod
   web:
-    build: gateway/.
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
     ports:
     - "80:8080"
     volumes:
