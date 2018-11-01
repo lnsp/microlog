@@ -27,7 +27,7 @@ type specification struct {
 	Datasource  string `required:"true" desc:"Database file name"`
 	Session     string `default:"secret" desc:"Shared session token secret"`
 	Minify      bool   `default:"false" desc:"Minify all responses"`
-	EmailService string `default:"mail" desc:"Email service host"`
+	EmailService string `default:"mail:8080" desc:"Email service host"`
 }
 
 func main() {
