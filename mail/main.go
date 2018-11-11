@@ -10,7 +10,7 @@ import (
 )
 
 type specification struct {
-	APIKey string `required:"true" desc:"SendGrid API Key"`
+	APIKey      string `required:"true" desc:"SendGrid API Key"`
 	Secret      string `required:"true" desc:"Encryption secret for tokens"`
 	Addr        string `default:":8080" desc:"Host and port to listen on"`
 	ConfirmURL  string `default:"http://localhost:8080/auth/confirm?token=%s" desc:"Confirmation URL format"`

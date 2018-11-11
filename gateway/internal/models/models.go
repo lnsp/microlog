@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"

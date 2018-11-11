@@ -1,5 +1,20 @@
 version: '3.5'
 services:
+  session:
+    build:
+      context: .
+      dockerfile: session/Dockerfile
+    depends_on:
+    - session_db
+    env_file:
+      - .env.prod
+  session_db:
+    image: redis
+    volumes:
+      - /data
+    env_file:
+      - .env.prod
+    command: ["redis-server", "--requirepass", "$${SESSION_REDISPASSWORD}", "--appendonly", "yes"]
   mail:
     build:
       context: .

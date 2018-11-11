@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/lnsp/microlog/gateway/pkg/utils"
 	"github.com/russross/blackfriday"
+	"github.com/sirupsen/logrus"
 )
 
 type changelogContext struct {

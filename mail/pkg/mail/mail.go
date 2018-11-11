@@ -3,7 +3,7 @@ package mail
 import (
 	"bytes"
 	"fmt"
-	"github.com/lnsp/microlog/gateway/pkg/tokens"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/lnsp/microlog/mail/api"
 	"github.com/pkg/errors"
 	"github.com/sendgrid/sendgrid-go"
@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"html/template"
+	"time"
 )
 
 const (
@@ -26,7 +27,7 @@ type Config struct {
 	TemplateFolder          string
 }
 
-type MailServer struct {
+type Server struct {
 	secret                          []byte
 	sender                          *mail.Email
 	mail                            *sendgrid.Client
@@ -35,30 +36,89 @@ type MailServer struct {
 	confirmURL, resetURL            string
 }
 
+type EmailPurpose string
+
+const (
+	EmailConfirmation  EmailPurpose = "purpose_confirmation"
+	EmailPasswordReset              = "purpose_resetpassword"
+)
+
+var (
+	ExpirationTimes = map[EmailPurpose]time.Duration{
+		EmailConfirmation:  time.Hour * 72,
+		EmailPasswordReset: time.Hour,
+	}
+	MapPurpose = map[api.VerificationRequest_Purpose]EmailPurpose{
+		api.VerificationRequest_CONFIRMATION:   EmailConfirmation,
+		api.VerificationRequest_PASSWORD_RESET: EmailPasswordReset,
+	}
+)
+
+type EmailInfo struct {
+	Identity     uint32
+	EmailAddress string
+	Purpose      EmailPurpose
+}
+
+type Claims struct {
+	jwt.StandardClaims
+	EmailInfo
+}
+
 type emailContext struct {
 	Name, Link string
 }
 
-func (s *MailServer) VerifyToken(ctx context.Context, req *api.VerificationRequest) (*api.VerificationResponse, error) {
-	var purpose tokens.EmailPurpose
-	switch req.Purpose {
-	case api.VerificationRequest_CONFIRMATION:
-		purpose = tokens.PurposeConfirmation
-	case api.VerificationRequest_PASSWORD_RESET:
-		purpose = tokens.PurposeReset
+func (s *Server) GenerateToken(info *EmailInfo) (string, error) {
+	expiration := ExpirationTimes[info.Purpose]
+	claims := &Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(expiration).Unix(),
+		},
+		EmailInfo: *info,
 	}
-	email, userID, ok := tokens.VerifyEmailToken(s.secret, req.Token, purpose)
-	if !ok {
-		return nil, errors.New("verification failed")
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString(s.secret)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to sign claims")
+	}
+	return signed, nil
+}
+
+func (s *Server) ProofToken(signed string) (*EmailInfo, error) {
+	var claims Claims
+	_, err := jwt.ParseWithClaims(signed, &claims, func(token *jwt.Token) (interface{}, error) {
+		if token.Method != jwt.SigningMethodHS256 {
+			return nil, errors.New("unexpected signing method")
+		}
+		return s.secret, nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse token")
+	}
+	return &claims.EmailInfo, nil
+}
+
+func (s *Server) VerifyToken(ctx context.Context, req *api.VerificationRequest) (*api.VerificationResponse, error) {
+	info, err := s.ProofToken(req.Token)
+	if err != nil {
+		return nil, errors.Wrap(err, "verification failed")
+	}
+	if info.Purpose != MapPurpose[req.Purpose] {
+		return nil, errors.New("purpose does not match")
 	}
 	return &api.VerificationResponse{
-		Email: email,
-		UserID: uint32(userID),
+		Email: info.EmailAddress,
+		Id:    info.Identity,
 	}, nil
 }
 
-func (s *MailServer) SendConfirmation(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
-	token, err := tokens.CreateEmailToken(s.secret, req.Email, uint(req.UserID), tokens.PurposeConfirmation)
+func (s *Server) SendConfirmation(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
+	token, err := s.GenerateToken(&EmailInfo{
+		EmailAddress: req.Email,
+		Identity:     req.Id,
+		Purpose:      EmailConfirmation,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create token")
 	}
@@ -85,8 +145,12 @@ func (s *MailServer) SendConfirmation(ctx context.Context, req *api.MailRequest)
 	}, nil
 }
 
-func (s *MailServer) SendPasswordReset(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
-	token, err := tokens.CreateEmailToken(s.secret, req.Email, uint(req.UserID), tokens.PurposeReset)
+func (s *Server) SendPasswordReset(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
+	token, err := s.GenerateToken(&EmailInfo{
+		EmailAddress: req.Email,
+		Identity:     req.Id,
+		Purpose:      EmailConfirmation,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create token")
 	}
@@ -113,10 +177,10 @@ func (s *MailServer) SendPasswordReset(ctx context.Context, req *api.MailRequest
 	}, nil
 }
 
-func NewServer(cfg *Config) *MailServer {
+func NewServer(cfg *Config) *Server {
 	forgotTemplate := template.Must(template.ParseFiles(cfg.TemplateFolder + "/forgot.html"))
 	confirmTemplate := template.Must(template.ParseFiles(cfg.TemplateFolder + "/confirm.html"))
-	return &MailServer{
+	return &Server{
 		sender:          mail.NewEmail(cfg.SenderName, cfg.SenderEmail),
 		mail:            sendgrid.NewSendClient(cfg.APIKey),
 		forgotTemplate:  forgotTemplate,

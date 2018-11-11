@@ -19,13 +19,13 @@ message VerificationRequest {
 
 message VerificationResponse {
     string email = 1;
-    uint32 userID = 2;
+    uint32 id = 2;
 }
 
 message MailRequest {
     string email = 1;
-    string name = 2;
-    uint32 userID = 3;
+    uint32 id = 2;
+    string name = 3;
 }
 
 message MailResponse {

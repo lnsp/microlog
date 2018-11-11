@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package api;
+
+service SessionService {
+    rpc Create(CreateRequest) returns (CreateResponse) {}
+    rpc Verify(VerifyRequest) returns (VerifyResponse) {}
+    rpc Delete(DeleteRequest) returns (DeleteResponse) {}
+}
+
+message CreateRequest {
+    uint32 id = 1;
+    string role = 2;
+}
+
+message CreateResponse {
+    string token = 1;
+}
+
+message VerifyRequest {
+    string token = 1;
+}
+
+message VerifyResponse {
+    bool ok = 1;
+    uint32 id = 2;
+    string role = 3;
+}
+
+message DeleteRequest {
+    string token = 1;
+}
+
+message DeleteResponse {
+}

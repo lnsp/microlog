@@ -3,45 +3,58 @@ package email
 import (
 	"context"
 	"github.com/lnsp/microlog/gateway/internal/models"
-	"github.com/lnsp/microlog/gateway/pkg/tokens"
 	"github.com/lnsp/microlog/mail/api"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"time"
 )
 
 type Client struct {
-	data   *models.DataSource
+	data    *models.DataSource
 	service string
 }
 
 func NewClient(dataSource *models.DataSource, mailService string) *Client {
 	return &Client{
-		data:   dataSource,
+		data:    dataSource,
 		service: mailService,
 	}
 }
 
-func (email *Client) Verify(token string, purpose tokens.EmailPurpose) (string, uint, error) {
-	conn, err := grpc.Dial(email.service, grpc.WithInsecure())
+func (email *Client) serviceClient() (api.MailServiceClient, *grpc.ClientConn, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, email.service, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		return "", 0, errors.Wrap(err, "failed to dial mail service")
+		return nil, nil, errors.Wrap(err, "failed to dial mail service")
+	}
+	client := api.NewMailServiceClient(conn)
+	return client, conn, nil
+}
+
+func (email *Client) VerifyConfirmationToken(token string) (string, uint, error) {
+	return email.verifyToken(token, api.VerificationRequest_CONFIRMATION)
+}
+
+func (email *Client) VerifyPasswordResetToken(token string) (string, uint, error) {
+	return email.verifyToken(token, api.VerificationRequest_PASSWORD_RESET)
+}
+
+func (email *Client) verifyToken(token string, purpose api.VerificationRequest_Purpose) (string, uint, error) {
+	client, conn, err := email.serviceClient()
+	if err != nil {
+		return "", 0, errors.Wrap(err, "failed to create client")
 	}
 	defer conn.Close()
-	client := api.NewMailServiceClient(conn)
 	req := &api.VerificationRequest{
-		Token: token,
-	}
-	switch purpose {
-	case tokens.PurposeReset:
-		req.Purpose = api.VerificationRequest_PASSWORD_RESET
-	case tokens.PurposeConfirmation:
-		req.Purpose = api.VerificationRequest_CONFIRMATION
+		Token:   token,
+		Purpose: purpose,
 	}
 	resp, err := client.VerifyToken(context.Background(), req)
 	if err != nil {
 		return "", 0, errors.Wrap(err, "failed to verify token")
 	}
-	return resp.Email, uint(resp.UserID), nil
+	return resp.Email, uint(resp.Id), nil
 }
 
 func (email *Client) SendConfirmation(userID uint, emailAddr string) error {
@@ -49,15 +62,14 @@ func (email *Client) SendConfirmation(userID uint, emailAddr string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to find user")
 	}
-	conn, err := grpc.Dial(email.service, grpc.WithInsecure())
+	client, conn, err := email.serviceClient()
 	if err != nil {
-		return errors.Wrap(err, "failed to dial mail service")
+		return errors.Wrap(err, "failed to create client")
 	}
 	defer conn.Close()
-	client := api.NewMailServiceClient(conn)
 	resp, err := client.SendConfirmation(context.Background(), &api.MailRequest{
-		Name: user.Name,
-		UserID: uint32(userID),
+		Name:  user.Name,
+		Id:    uint32(userID),
 		Email: emailAddr,
 	})
 	if err != nil {
@@ -71,15 +83,14 @@ func (email *Client) SendPasswordReset(userID uint, emailAddr string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to find user")
 	}
-	conn, err := grpc.Dial(email.service, grpc.WithInsecure())
+	client, conn, err := email.serviceClient()
 	if err != nil {
-		return errors.Wrap(err, "failed to dial mail service")
+		return errors.Wrap(err, "failed to create client")
 	}
 	defer conn.Close()
-	client := api.NewMailServiceClient(conn)
 	resp, err := client.SendPasswordReset(context.Background(), &api.MailRequest{
-		Name: user.Name,
-		UserID: uint32(userID),
+		Name:  user.Name,
+		Id:    uint32(userID),
 		Email: emailAddr,
 	})
 	if err != nil {

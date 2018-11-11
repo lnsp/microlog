@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/lnsp/microlog/gateway/pkg/tokens"
 	"github.com/lnsp/microlog/gateway/pkg/utils"
+	"github.com/sirupsen/logrus"
 )
 
 type emailContext struct {
@@ -22,11 +21,11 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 			HeadControls: true,
 		}
 	}
-	_, uid, mod, ok := tokens.VerifySessionToken(router.SessionSecret, sessionCookie.Value)
-	if !ok {
+	id, mod, err := router.Session.Verify(sessionCookie.Value)
+	if err != nil {
 		log.WithFields(logrus.Fields{
 			"token": sessionCookie.Value,
-			"type":  "invalid token",
+			"type":  "failed to verify token",
 		}).WithError(err).Error("failed to create context")
 		return &Context{
 			SignedIn:     false,
@@ -35,7 +34,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 	}
 	return &Context{
 		SignedIn:     true,
-		UserID:       uid,
+		UserID:       id,
 		HeadControls: true,
 		Moderator:    mod,
 	}
@@ -43,7 +42,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 
 func (router *Router) confirm(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	email, userID, err := router.EmailClient.Verify(token, tokens.PurposeConfirmation)
+	email, userID, err := router.Email.VerifyConfirmationToken(token)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
@@ -93,7 +92,7 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	id, err := router.Data.IdentityByEmail(email)
 	if err == nil && id.Confirmed {
-		if err := router.EmailClient.SendPasswordReset(id.UserID, email); err != nil {
+		if err := router.Email.SendPasswordReset(id.UserID, email); err != nil {
 			ctx.Success = false
 			ctx.ErrorMessage = "Unexpected internal error, please try again."
 			log.WithFields(logrus.Fields{
@@ -126,7 +125,7 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) reset(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	_, _, err := router.EmailClient.Verify(token, tokens.PurposeReset)
+	_, _, err := router.Email.VerifyPasswordResetToken(token)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
@@ -141,7 +140,7 @@ func (router *Router) reset(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) resetSubmit(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query()["token"][0]
-	email, userID, err := router.EmailClient.Verify(token, tokens.PurposeReset)
+	email, userID, err := router.Email.VerifyPasswordResetToken(token)
 	ctx := emailContext{
 		Context: *router.defaultContext(r),
 		Success: false,
@@ -242,7 +241,17 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 		router.render(loginTemplate, w, ctx)
 		return
 	}
-	token, err := tokens.CreateSessionToken(router.SessionSecret, user.Name, user.ID, user.Moderator)
+	token, err := router.Session.Create(id)
+	if err != nil {
+		ctx := router.defaultContext(r)
+		ctx.ErrorMessage = "Unexpected internal error, please try again."
+		log.WithFields(logrus.Fields{
+			"id":   id,
+			"addr": utils.RemoteHost(r),
+		}).WithError(err).Error("failed to create session")
+		router.render(loginTemplate, w, ctx)
+		return
+	}
 	if err != nil {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "Unexpected internal error, please try again."
@@ -287,6 +296,16 @@ func (router *Router) signup(w http.ResponseWriter, r *http.Request) {
 func (router *Router) logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Path: "/", Value: "", Name: sessionCookieName, Expires: time.Now()})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+	sessionCookie, err := r.Cookie(sessionCookieName)
+	if err != nil {
+		return
+	}
+	err = router.Session.Delete(sessionCookie.Value)
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"addr": utils.RemoteHost(r),
+		}).WithError(err).Warn("failed to delete session")
+	}
 }
 
 func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
@@ -348,7 +367,7 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := router.EmailClient.SendConfirmation(userID, email); err != nil {
+	if err := router.Email.SendConfirmation(userID, email); err != nil {
 		ctx.ErrorMessage = "Internal error occurred, please try again."
 		log.WithError(err).WithFields(logrus.Fields{
 			"name":   name,

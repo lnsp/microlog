@@ -1,7 +1,7 @@
 module github.com/lnsp/microlog/gateway
 
 require (
-	github.com/Sirupsen/logrus v1.0.6
+	github.com/sirupsen/logrus v1.0.6
 	github.com/denisenkom/go-mssqldb v0.0.0-20180707235734-242fa5aa1b45 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d

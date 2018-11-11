@@ -1,12 +1,13 @@
 package main
 
 import (
+	"github.com/lnsp/microlog/gateway/internal/session"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
 
 	"github.com/lnsp/microlog/gateway/internal/email"
 	"github.com/lnsp/microlog/gateway/internal/models"
@@ -22,12 +23,12 @@ var log = &logrus.Logger{
 }
 
 type specification struct {
-	PublicAddr  string `default:"localhost:8080" desc:"Public address the server is reachable on"`
-	Addr        string `default:":8080" desc:"Address the server is listening on"`
-	Datasource  string `required:"true" desc:"Database file name"`
-	Session     string `default:"secret" desc:"Shared session token secret"`
-	Minify      bool   `default:"false" desc:"Minify all responses"`
-	EmailService string `default:"mail:8080" desc:"Email service host"`
+	PublicAddr     string `default:"localhost:8080" desc:"Public address the server is reachable on"`
+	Addr           string `default:":8080" desc:"Address the server is listening on"`
+	Datasource     string `required:"true" desc:"Database file name"`
+	Minify         bool   `default:"false" desc:"Minify all responses"`
+	EmailService   string `default:"mail:8080" desc:"Email service host"`
+	SessionService string `default:"session:8080" desc:"Session service host"`
 }
 
 func main() {
@@ -43,8 +44,8 @@ func main() {
 		}).Fatal("failed to open data source")
 	}
 	handler := router.New(router.Config{
-		SessionSecret: []byte(spec.Session),
 		EmailClient:   email.NewClient(dataSource, spec.EmailService),
+		SessionClient: session.NewClient(dataSource, spec.SessionService),
 		DataSource:    dataSource,
 		PublicAddress: spec.PublicAddr,
 		Minify:        true,

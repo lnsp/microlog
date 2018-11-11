@@ -1,7 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2018-11-11
+### Changed
+- Moved session tokens into separate service
+
 ## 2018-11-01
+### Added
+- Moderation panel for community leaders
+
 ### Changed
 - Post titles now have a minimum length of 3 characters, while post content must be at least 10 characters
 

@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/lnsp/microlog/gateway/pkg/utils"
+	"github.com/sirupsen/logrus"
 )
 
 type dashboardPost struct {

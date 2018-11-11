@@ -1,15 +1,16 @@
 package router
 
 import (
+	"github.com/lnsp/microlog/gateway/internal/session"
 	"html/template"
 	"net/http"
 	"os"
 	"regexp"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/lnsp/microlog/gateway/internal/email"
 	"github.com/lnsp/microlog/gateway/internal/models"
+	"github.com/sirupsen/logrus"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/css"
 	"github.com/tdewolff/minify/html"
@@ -55,8 +56,9 @@ var (
 )
 
 type Config struct {
-	SessionSecret []byte
+	SessionAddr   string
 	EmailClient   *email.Client
+	SessionClient *session.Client
 	DataSource    *models.DataSource
 	PublicAddress string
 	Minify        bool
@@ -65,8 +67,8 @@ type Config struct {
 func New(cfg Config) http.Handler {
 	router := &Router{
 		Data:          cfg.DataSource,
-		SessionSecret: cfg.SessionSecret,
-		EmailClient:   cfg.EmailClient,
+		Email:         cfg.EmailClient,
+		Session:       cfg.SessionClient,
 		PublicAddress: cfg.PublicAddress,
 	}
 	serveMux := mux.NewRouter()
@@ -127,10 +129,9 @@ type Context struct {
 }
 
 type Router struct {
-	EmailClient   *email.Client
+	Email         *email.Client
+	Session       *session.Client
 	Data          *models.DataSource
-	SessionSecret []byte
-	EmailSecret   []byte
 	PublicAddress string
 	Minification  bool
 }

@@ -3,9 +3,9 @@ package router
 import (
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/lnsp/microlog/gateway/pkg/utils"
+	"github.com/sirupsen/logrus"
 )
 
 type profilePost struct {
