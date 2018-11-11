@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/lnsp/microlog/gateway/pkg/utils"
 	"github.com/russross/blackfriday"
 	"github.com/sirupsen/logrus"
 )
@@ -25,9 +24,8 @@ func (router *Router) changelog(w http.ResponseWriter, r *http.Request) {
 	changelogOnce.Do(func() {
 		bytes, err := ioutil.ReadFile(changelogPath)
 		if err != nil {
-			log.WithFields(logrus.Fields{
+			log.WithRequest(r).WithFields(logrus.Fields{
 				"changelog": changelogPath,
-				"addr":      utils.RemoteHost(r),
 			}).WithError(err).Error("failed to read changelog")
 			return
 		}

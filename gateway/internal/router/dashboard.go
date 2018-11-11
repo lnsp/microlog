@@ -5,8 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	humanize "github.com/dustin/go-humanize"
-	"github.com/lnsp/microlog/gateway/pkg/utils"
+	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 )
 
@@ -61,17 +60,15 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 	}
 	popularPosts, err := router.Data.PopularPosts(time.Now().Add(timeInterval), dashboardPostsLimit)
 	if err != nil {
-		log.WithFields(logrus.Fields{
-			"id":   ctx.UserID,
-			"addr": utils.RemoteHost(r),
+		log.WithRequest(r).WithFields(logrus.Fields{
+			"id": ctx.UserID,
 		}).WithError(err).Error("failed to fetch popular posts")
 		ctx.ErrorMessage = "An internal error occured, please try again."
 	}
 	recentUsers, err := router.Data.RecentUsers(dashboardUsersLimit)
 	if err != nil {
-		log.WithFields(logrus.Fields{
-			"id":   ctx.UserID,
-			"addr": utils.RemoteHost(r),
+		log.WithRequest(r).WithFields(logrus.Fields{
+			"id": ctx.UserID,
 		}).WithError(err).Error("failed to fetch new users")
 		ctx.ErrorMessage = "An internal error occured, please try again."
 	}
@@ -80,19 +77,17 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 	for _, post := range popularPosts {
 		user, err := router.Data.User(post.UserID)
 		if err != nil {
-			log.WithFields(logrus.Fields{
+			log.WithRequest(r).WithFields(logrus.Fields{
 				"id":   ctx.UserID,
 				"post": post.ID,
-				"addr": utils.RemoteHost(r),
 			}).WithError(err).Error("failed to fetch user")
 			continue
 		}
 		likes, err := router.Data.NumberOfLikes(post.ID)
 		if err != nil {
-			log.WithFields(logrus.Fields{
+			log.WithRequest(r).WithFields(logrus.Fields{
 				"id":   ctx.UserID,
 				"post": post.ID,
-				"addr": utils.RemoteHost(r),
 			}).WithError(err).Error("failed to retrieve number of likes")
 			continue
 		}

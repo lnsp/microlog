@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lnsp/microlog/gateway/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -48,30 +47,27 @@ func (router *Router) confirm(w http.ResponseWriter, r *http.Request) {
 		Success: false,
 	}
 	if err != nil {
-		log.WithError(err).WithFields(logrus.Fields{
+		log.WithRequest(r).WithError(err).WithFields(logrus.Fields{
 			"token": token,
-			"addr":  utils.RemoteHost(r),
 			"type":  "invalid token",
 		}).Debug("attempt to confirm identity")
 		router.render(confirmTemplate, w, ctx)
 		return
 	}
 	if err := router.Data.ConfirmIdentity(userID, email); err != nil {
-		log.WithFields(logrus.Fields{
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"token": token,
 			"email": email,
 			"id":    userID,
-			"addr":  utils.RemoteHost(r),
 		}).WithError(err).Error("failed to confirm identity")
 		router.render(confirmTemplate, w, ctx)
 		return
 	}
 	ctx.Success = true
-	log.WithFields(logrus.Fields{
+	log.WithRequest(r).WithFields(logrus.Fields{
 		"token": token,
 		"email": email,
 		"id":    userID,
-		"addr":  utils.RemoteHost(r),
 	}).Debug("confirmed identity")
 	router.render(confirmTemplate, w, ctx)
 }
@@ -95,27 +91,23 @@ func (router *Router) forgotSubmit(w http.ResponseWriter, r *http.Request) {
 		if err := router.Email.SendPasswordReset(id.UserID, email); err != nil {
 			ctx.Success = false
 			ctx.ErrorMessage = "Unexpected internal error, please try again."
-			log.WithFields(logrus.Fields{
-				"addr":  utils.RemoteHost(r),
+			log.WithRequest(r).WithFields(logrus.Fields{
 				"email": email,
 				"id":    id.UserID,
 			}).WithError(err).Error("failed to send password reset email")
 		} else {
-			log.WithFields(logrus.Fields{
-				"addr":  utils.RemoteHost(r),
+			log.WithRequest(r).WithFields(logrus.Fields{
 				"email": email,
 				"id":    id.UserID,
 			}).Debug("requested password reset")
 		}
 	} else if err != nil {
-		log.WithFields(logrus.Fields{
-			"addr":  utils.RemoteHost(r),
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"email": email,
 			"type":  "unknown identity",
 		}).WithError(err).Debug("attempt to request password reset")
 	} else if !id.Confirmed {
-		log.WithFields(logrus.Fields{
-			"addr":  utils.RemoteHost(r),
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"email": email,
 			"type":  "unconfirmed identity",
 		}).WithError(err).Debug("attempt to request password reset")
@@ -146,9 +138,8 @@ func (router *Router) resetSubmit(w http.ResponseWriter, r *http.Request) {
 		Success: false,
 	}
 	if err != nil {
-		log.WithError(err).WithFields(logrus.Fields{
+		log.WithRequest(r).WithError(err).WithFields(logrus.Fields{
 			"token": token,
-			"addr":  utils.RemoteHost(r),
 			"type":  "invalid token",
 		}).Debug("attempt to reset password")
 		router.render(resetTemplate, w, ctx)
@@ -161,10 +152,9 @@ func (router *Router) resetSubmit(w http.ResponseWriter, r *http.Request) {
 	)
 	if password != passwordConfirm {
 		ctx.ErrorMessage = "Passwords do not match."
-		log.WithFields(logrus.Fields{
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"id":    userID,
 			"token": token,
-			"addr":  utils.RemoteHost(r),
 			"type":  "password mismatch",
 		}).Debug("attempt to reset password")
 		router.render(resetTemplate, w, ctx)
@@ -172,10 +162,9 @@ func (router *Router) resetSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	if !router.Data.ValidatePassword(password) {
 		ctx.ErrorMessage = "Password must be at min 8 characters long."
-		log.WithFields(logrus.Fields{
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"id":    userID,
 			"token": token,
-			"addr":  utils.RemoteHost(r),
 			"type":  "invalid password",
 		}).Debug("attempt to reset password")
 		router.render(resetTemplate, w, ctx)
@@ -183,11 +172,10 @@ func (router *Router) resetSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := router.Data.ResetPassword(userID, email, []byte(password)); err != nil {
 		ctx.ErrorMessage = "Unexpected internal error, please try again."
-		log.WithFields(logrus.Fields{
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"id":    userID,
 			"email": email,
 			"token": token,
-			"addr":  utils.RemoteHost(r),
 		}).WithError(err).Error("failed to reset password")
 		router.render(resetTemplate, w, ctx)
 		return
@@ -212,9 +200,8 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "User identity does not exist."
-		log.WithFields(logrus.Fields{
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"email": email,
-			"addr":  utils.RemoteHost(r),
 		}).WithError(err).Debug("failed login attempt")
 		router.render(loginTemplate, w, ctx)
 		return
@@ -222,10 +209,9 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 	if !confirmed {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "User identity is not confirmed."
-		log.WithFields(logrus.Fields{
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"id":    id,
 			"email": email,
-			"addr":  utils.RemoteHost(r),
 		}).Debug("unconfirmed login attempt")
 		router.render(loginTemplate, w, ctx)
 		return
@@ -234,9 +220,8 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "Unexpected internal error, please try again."
-		log.WithFields(logrus.Fields{
-			"id":   id,
-			"addr": utils.RemoteHost(r),
+		log.WithRequest(r).WithFields(logrus.Fields{
+			"id": id,
 		}).WithError(err).Error("failed to login user")
 		router.render(loginTemplate, w, ctx)
 		return
@@ -245,9 +230,8 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "Unexpected internal error, please try again."
-		log.WithFields(logrus.Fields{
-			"id":   id,
-			"addr": utils.RemoteHost(r),
+		log.WithRequest(r).WithFields(logrus.Fields{
+			"id": id,
 		}).WithError(err).Error("failed to create session")
 		router.render(loginTemplate, w, ctx)
 		return
@@ -255,9 +239,8 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ctx := router.defaultContext(r)
 		ctx.ErrorMessage = "Unexpected internal error, please try again."
-		log.WithFields(logrus.Fields{
-			"id":   id,
-			"addr": utils.RemoteHost(r),
+		log.WithRequest(r).WithFields(logrus.Fields{
+			"id": id,
 		}).WithError(err).Error("failed to login user")
 		router.render(loginTemplate, w, ctx)
 		return
@@ -269,10 +252,9 @@ func (router *Router) loginSubmit(w http.ResponseWriter, r *http.Request) {
 		Expires: time.Now().Add(time.Hour),
 	}
 	http.SetCookie(w, &cookie)
-	log.WithFields(logrus.Fields{
+	log.WithRequest(r).WithFields(logrus.Fields{
 		"id":   user.ID,
 		"name": user.Name,
-		"addr": utils.RemoteHost(r),
 	}).Info("user login")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -302,9 +284,7 @@ func (router *Router) logout(w http.ResponseWriter, r *http.Request) {
 	}
 	err = router.Session.Delete(sessionCookie.Value)
 	if err != nil {
-		log.WithFields(logrus.Fields{
-			"addr": utils.RemoteHost(r),
-		}).WithError(err).Warn("failed to delete session")
+		log.WithRequest(r).WithError(err).Warn("failed to delete session")
 	}
 }
 
@@ -378,11 +358,10 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.WithFields(logrus.Fields{
+	log.WithRequest(r).WithFields(logrus.Fields{
 		"id":    userID,
 		"user":  name,
 		"email": email,
-		"addr":  utils.RemoteHost(r),
 	}).Debug("new user signed up")
 	router.render(signupSuccessTemplate, w, ctx)
 }
@@ -403,9 +382,8 @@ func (router *Router) deleteSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	router.Data.DeleteUser(ctx.UserID)
-	logrus.WithFields(logrus.Fields{
-		"id":   ctx.UserID,
-		"addr": utils.RemoteHost(r),
+	log.WithRequest(r).WithFields(logrus.Fields{
+		"id": ctx.UserID,
 	}).Info("deleted user account")
 	http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
 }

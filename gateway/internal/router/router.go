@@ -1,10 +1,10 @@
 package router
 
 import (
+	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/gateway/internal/session"
 	"html/template"
 	"net/http"
-	"os"
 	"regexp"
 
 	"github.com/gorilla/mux"
@@ -27,12 +27,7 @@ const (
 	dashboardUsersLimit = 5
 )
 
-var log = &logrus.Logger{
-	Out:       os.Stderr,
-	Formatter: new(logrus.JSONFormatter),
-	Hooks:     make(logrus.LevelHooks),
-	Level:     logrus.DebugLevel,
-}
+var log = common.Logger()
 
 var (
 	signupSuccessTemplate  = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/signupSuccess.html"))
