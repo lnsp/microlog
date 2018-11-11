@@ -11,7 +11,7 @@ func (router *Router) Error(w http.ResponseWriter, r *http.Request, msg string, 
 }
 
 type moderationReport struct {
-	ID uint
+	ID        uint
 	PostTitle string
 	PostID    uint
 	PostUser  string
@@ -104,7 +104,7 @@ func (router *Router) Moderate(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		modContext.Reports[index] = moderationReport{
-			ID: report.ID,
+			ID:        report.ID,
 			Reason:    report.Reason,
 			Reporter:  reporter.Name,
 			PostUser:  user.Name,
