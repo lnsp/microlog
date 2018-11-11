@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/kelseyhightower/envconfig"
+	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/mail/api"
 	"github.com/lnsp/microlog/mail/pkg/mail"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
 )
@@ -20,6 +20,8 @@ type specification struct {
 	SenderEmail string `default:"team@microlog.co" desc:"The default sender email"`
 }
 
+var log = common.Logger()
+
 func main() {
 	var spec specification
 	if err := envconfig.Process("mail", &spec); err != nil {
@@ -28,7 +30,7 @@ func main() {
 	}
 	listener, err := net.Listen("tcp", spec.Addr)
 	if err != nil {
-		logrus.WithError(err).Fatal("could not setup networking")
+		log.WithError(err).Fatal("could not setup networking")
 	}
 	grpcServer := grpc.NewServer()
 	api.RegisterMailServiceServer(grpcServer, mail.NewServer(&mail.Config{
@@ -41,6 +43,6 @@ func main() {
 		Secret:         []byte(spec.Secret),
 	}))
 	if err := grpcServer.Serve(listener); err != nil {
-		logrus.WithError(err).Fatal("could not serve")
+		log.WithError(err).Fatal("could not serve")
 	}
 }

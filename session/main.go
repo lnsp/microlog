@@ -2,12 +2,14 @@ package main
 
 import (
 	"github.com/kelseyhightower/envconfig"
+	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/session/api"
 	"github.com/lnsp/microlog/session/pkg/session"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
 )
+
+var log = common.Logger()
 
 type specification struct {
 	Secret        string `required:"true" desc:"Signing key for session tokens"`
@@ -24,7 +26,7 @@ func main() {
 	}
 	listener, err := net.Listen("tcp", spec.Addr)
 	if err != nil {
-		logrus.WithError(err).Fatal("could not setup networking")
+		log.WithError(err).Fatal("could not setup networking")
 	}
 	grpcServer := grpc.NewServer()
 	api.RegisterSessionServiceServer(grpcServer, session.NewServer(&session.Config{
@@ -33,6 +35,6 @@ func main() {
 		RedisPassword: spec.RedisPassword,
 	}))
 	if err := grpcServer.Serve(listener); err != nil {
-		logrus.WithError(err).Fatal("failed to serve")
+		log.WithError(err).Fatal("failed to serve")
 	}
 }

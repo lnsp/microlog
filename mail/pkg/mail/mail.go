@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/mail/api"
 	"github.com/pkg/errors"
 	"github.com/sendgrid/sendgrid-go"
@@ -13,6 +14,8 @@ import (
 	"html/template"
 	"time"
 )
+
+var log = common.Logger()
 
 const (
 	resetSubject   = "Reset your email"
@@ -100,13 +103,23 @@ func (s *Server) ProofToken(signed string) (*EmailInfo, error) {
 }
 
 func (s *Server) VerifyToken(ctx context.Context, req *api.VerificationRequest) (*api.VerificationResponse, error) {
+	log := log.WithFields(logrus.Fields{
+		"purpose": req.Purpose,
+		"token":   req.Token,
+	})
 	info, err := s.ProofToken(req.Token)
 	if err != nil {
+		log.WithError(err).Warn("verification failed")
 		return nil, errors.Wrap(err, "verification failed")
 	}
 	if info.Purpose != MapPurpose[req.Purpose] {
+		log.Warn("purpose does not match")
 		return nil, errors.New("purpose does not match")
 	}
+	log.WithFields(logrus.Fields{
+		"identity": info.Identity,
+		"email":    info.EmailAddress,
+	}).Debug("verification successful")
 	return &api.VerificationResponse{
 		Email: info.EmailAddress,
 		Id:    info.Identity,
@@ -114,31 +127,37 @@ func (s *Server) VerifyToken(ctx context.Context, req *api.VerificationRequest) 
 }
 
 func (s *Server) SendConfirmation(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
+	log := log.WithFields(logrus.Fields{
+		"email":    req.Email,
+		"identity": req.Id,
+		"purpose":  EmailConfirmation,
+	})
 	token, err := s.GenerateToken(&EmailInfo{
 		EmailAddress: req.Email,
 		Identity:     req.Id,
 		Purpose:      EmailConfirmation,
 	})
 	if err != nil {
+		log.WithError(err).Warn("failed to create token")
 		return nil, errors.Wrap(err, "failed to create token")
 	}
 	link := fmt.Sprintf(s.confirmURL, token)
 	buf := new(bytes.Buffer)
 	if err := s.confirmTemplate.Execute(buf, &emailContext{Name: req.Name, Link: link}); err != nil {
+		log.WithError(err).Warn("failed to render email")
 		return nil, errors.Wrap(err, "failed to render email")
 	}
 	receiver := mail.NewEmail(req.Name, req.Email)
 	message := mail.NewSingleEmail(s.sender, confirmSubject, receiver, buf.String(), buf.String())
 	resp, err := s.mail.Send(message)
 	if err != nil {
+		log.WithError(err).Warn("failed to send email")
 		return nil, errors.Wrap(err, "failed to send email")
 	}
-	logrus.WithFields(logrus.Fields{
-		"type":   "passwordReset",
-		"addr":   req.Email,
+	log.WithFields(logrus.Fields{
 		"link":   link,
 		"status": resp.StatusCode,
-	}).Debug("send password reset email")
+	}).Debug("sent confirmation email")
 	return &api.MailResponse{
 		Status: "OK",
 		Code:   int32(resp.StatusCode),
@@ -146,31 +165,37 @@ func (s *Server) SendConfirmation(ctx context.Context, req *api.MailRequest) (*a
 }
 
 func (s *Server) SendPasswordReset(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
+	log := log.WithFields(logrus.Fields{
+		"email":    req.Email,
+		"identity": req.Id,
+		"purpose":  EmailPasswordReset,
+	})
 	token, err := s.GenerateToken(&EmailInfo{
 		EmailAddress: req.Email,
 		Identity:     req.Id,
-		Purpose:      EmailConfirmation,
+		Purpose:      EmailPasswordReset,
 	})
 	if err != nil {
+		log.WithError(err).Warn("failed to create token")
 		return nil, errors.Wrap(err, "failed to create token")
 	}
 	link := fmt.Sprintf(s.resetURL, token)
 	buf := new(bytes.Buffer)
 	if err := s.forgotTemplate.Execute(buf, &emailContext{Name: req.Name, Link: link}); err != nil {
+		log.WithError(err).Warn("failed to render email")
 		return nil, errors.Wrap(err, "failed to render email")
 	}
 	receiver := mail.NewEmail(req.Name, req.Email)
 	message := mail.NewSingleEmail(s.sender, resetSubject, receiver, buf.String(), buf.String())
 	resp, err := s.mail.Send(message)
 	if err != nil {
+		log.WithError(err).Warn("failed to send email")
 		return nil, errors.Wrap(err, "failed to send email")
 	}
-	logrus.WithFields(logrus.Fields{
-		"type":   "passwordReset",
-		"addr":   req.Email,
+	log.WithFields(logrus.Fields{
 		"link":   link,
 		"status": resp.StatusCode,
-	}).Debug("send password reset email")
+	}).Debug("sent password reset email")
 	return &api.MailResponse{
 		Status: "OK",
 		Code:   int32(resp.StatusCode),

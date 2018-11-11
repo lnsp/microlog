@@ -1,7 +1,9 @@
 package session
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
+	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/session/api"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -21,34 +23,51 @@ type Server struct {
 	expiration time.Duration
 }
 
+var log = common.Logger()
+
 func (svc *Server) Create(ctx context.Context, req *api.CreateRequest) (*api.CreateResponse, error) {
+	log := log.WithFields(logrus.Fields{
+		"identity": req.Id,
+		"role":     req.Role,
+	})
 	token, err := svc.GenerateToken(&UserInfo{
 		Identity: req.Id,
 		Role:     req.Role,
 	})
 	if err != nil {
+		log.WithError(err).Warn("failed to generate token")
 		return nil, errors.Wrap(err, "failed to generate token")
 	}
 	if err := svc.redis.Set(token, "active", svc.expiration).Err(); err != nil {
-		return nil, errors.Wrap(err, "failed to save toen")
+		log.WithError(err).Warn("failed to save token")
+		return nil, errors.Wrap(err, "failed to save token")
 	}
+	log.Debug("created session")
 	return &api.CreateResponse{
 		Token: token,
 	}, nil
 }
 
 func (svc *Server) Verify(ctx context.Context, req *api.VerifyRequest) (*api.VerifyResponse, error) {
+	log := log.WithField("token", req.Token)
 	info, err := svc.ProofToken(req.Token)
 	if err != nil {
+		log.WithError(err).Debug("failed to verify token")
 		return &api.VerifyResponse{
 			Ok: false,
 		}, nil
 	}
+	log = log.WithFields(logrus.Fields{
+		"identity": info.Identity,
+		"role":     info.Role,
+	})
 	if active := svc.redis.Get(req.Token).String(); active != "active" {
+		log.WithError(err).Warn("attempt to sign in using deleted session")
 		return &api.VerifyResponse{
 			Ok: false,
 		}, nil
 	}
+	log.Debug("verified session")
 	return &api.VerifyResponse{
 		Ok:   true,
 		Id:   info.Identity,
@@ -57,13 +76,21 @@ func (svc *Server) Verify(ctx context.Context, req *api.VerifyRequest) (*api.Ver
 }
 
 func (svc *Server) Delete(ctx context.Context, req *api.DeleteRequest) (*api.DeleteResponse, error) {
-	_, err := svc.ProofToken(req.Token)
+	log := log.WithField("token", req.Token)
+	info, err := svc.ProofToken(req.Token)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not validate token")
+		log.WithError(err).Debug("failed to verify token")
+		return nil, errors.Wrap(err, "failed to verify token")
 	}
+	log = log.WithFields(logrus.Fields{
+		"identity": info.Identity,
+		"role":     info.Role,
+	})
 	if err := svc.redis.Del(req.Token).Err(); err != nil {
-		return nil, errors.Wrap(err, "could not delete session")
+		log.WithError(err).Warn("failed to delete session")
+		return nil, errors.Wrap(err, "failed to delete session")
 	}
+	log.Debug("deleted session")
 	return &api.DeleteResponse{}, nil
 }
 
