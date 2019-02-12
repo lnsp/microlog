@@ -1,13 +1,14 @@
 package session
 
 import (
+	"time"
+
 	"github.com/go-redis/redis"
 	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/session/api"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"time"
 )
 
 type Config struct {
@@ -61,7 +62,7 @@ func (svc *Server) Verify(ctx context.Context, req *api.VerifyRequest) (*api.Ver
 		"identity": info.Identity,
 		"role":     info.Role,
 	})
-	if active := svc.redis.Get(req.Token).String(); active != "" {
+	if active := svc.redis.Get(req.Token).String(); active == "" {
 		log.WithError(err).Warn("attempt to sign in using deleted session")
 		return &api.VerifyResponse{
 			Ok: false,
@@ -100,7 +101,8 @@ func NewServer(cfg *Config) *Server {
 		Password: cfg.RedisPassword,
 	})
 	return &Server{
-		secret: cfg.Secret,
-		redis:  redisClient,
+		secret:     cfg.Secret,
+		redis:      redisClient,
+		expiration: cfg.ExpirationTime,
 	}
 }
