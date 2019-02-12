@@ -6,27 +6,27 @@ services:
       dockerfile: session/Dockerfile
     depends_on:
     - session_db
-    env_file:
-      - .env.prod
+    env_file: .env
+    restart: always
   session_db:
     image: redis
+    env_file: .env
     volumes:
       - /data
-    env_file:
-      - .env.prod
-    command: ["redis-server", "--requirepass", "$${SESSION_REDISPASSWORD}", "--appendonly", "yes"]
+    command: "redis-server --requirepass ${SESSION_REDISPASSWORD}"
+    restart: always
   mail:
     build:
       context: .
       dockerfile: mail/Dockerfile
-    env_file:
-      - .env.prod
+    env_file: .env
+    restart: always
   web_db:
     image: postgres
     volumes:
       - /var/lib/postgresql/data
-    env_file:
-      - .env.prod
+    env_file: .env
+    restart: always
   web:
     build:
       context: .
@@ -38,5 +38,4 @@ services:
       - "80:8080"
     volumes:
       - ./micro.db:/app/micro.db
-    env_file:
-      - .env.prod
+    env_file: .env
