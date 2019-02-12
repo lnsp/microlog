@@ -1,12 +1,14 @@
 package main
 
 import (
+	"net"
+	"time"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/session/api"
 	"github.com/lnsp/microlog/session/pkg/session"
 	"google.golang.org/grpc"
-	"net"
 )
 
 var log = common.Logger()
@@ -16,6 +18,7 @@ type specification struct {
 	Redis         string `required:"true" desc:"Address for redis data store"`
 	RedisPassword string `required:"true" desc:"Password for redis data store"`
 	Addr          string `default:":8080" desc:"Address the service is listening on"`
+	Expiration    string `default:"24h" desc:"Set expiration time"`
 }
 
 func main() {
@@ -29,10 +32,12 @@ func main() {
 		log.WithError(err).Fatal("could not setup networking")
 	}
 	grpcServer := grpc.NewServer()
+	expirationTime, err := time.ParseDuration(spec.Expiration)
 	api.RegisterSessionServiceServer(grpcServer, session.NewServer(&session.Config{
-		Secret:        []byte(spec.Secret),
-		RedisAddr:     spec.Redis,
-		RedisPassword: spec.RedisPassword,
+		Secret:         []byte(spec.Secret),
+		RedisAddr:      spec.Redis,
+		RedisPassword:  spec.RedisPassword,
+		ExpirationTime: expirationTime,
 	}))
 	if err := grpcServer.Serve(listener); err != nil {
 		log.WithError(err).Fatal("failed to serve")
