@@ -8,6 +8,6 @@ require (
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/pkg/errors v0.8.0
 	github.com/sirupsen/logrus v1.1.1
-	golang.org/x/net v0.0.0-20181029044818-c44066c5c816
+	golang.org/x/net v0.0.0-20190206173232-65e2d4e15006
 	google.golang.org/grpc v1.16.0
 )
