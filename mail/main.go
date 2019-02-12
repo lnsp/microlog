@@ -1,12 +1,13 @@
 package main
 
 import (
+	"net"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/mail/api"
 	"github.com/lnsp/microlog/mail/pkg/mail"
 	"google.golang.org/grpc"
-	"net"
 )
 
 type specification struct {
