@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/gateway/internal/session"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -12,15 +12,9 @@ import (
 	"github.com/lnsp/microlog/gateway/internal/email"
 	"github.com/lnsp/microlog/gateway/internal/models"
 	"github.com/lnsp/microlog/gateway/internal/router"
-	"github.com/lnsp/microlog/gateway/pkg/utils"
 )
 
-var log = &logrus.Logger{
-	Out:       os.Stderr,
-	Hooks:     make(logrus.LevelHooks),
-	Formatter: new(logrus.JSONFormatter),
-	Level:     logrus.DebugLevel,
-}
+var log = common.Logger()
 
 type specification struct {
 	PublicAddr     string `default:"localhost:8080" desc:"Public address the server is reachable on"`
@@ -69,11 +63,10 @@ func logger(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t := time.Now()
 		h.ServeHTTP(w, r)
-		log.WithFields(logrus.Fields{
+		log.WithRequest(r).WithFields(logrus.Fields{
 			"responseTime": time.Since(t).Seconds() * 1000.,
 			"method":       r.Method,
 			"path":         r.URL.Path,
-			"remoteAddr":   utils.RemoteHost(r),
 		}).Debug("handled request")
 	})
 }

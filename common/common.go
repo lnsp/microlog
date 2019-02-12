@@ -1,10 +1,11 @@
 package common
 
 import (
-	"github.com/Sirupsen/logrus"
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 type logger struct {
