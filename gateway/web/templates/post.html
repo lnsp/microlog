@@ -7,7 +7,7 @@
 <div class="post-content">
     <p>{{ .HTMLContent }}</p>
 </div>
-<p class="post-actions">
+<nav class="nav-horizontal nav-actions">
     {{ if .Self }}
     <a href="edit">edit</a>
     <a href="delete">delete</a>
@@ -18,6 +18,6 @@
     <!--<a href="comment">comment</a>!-->
     <!-- All post actions come here-->
     <!-- TODO: Add likes and comments -->
-</p>
+</nav>
 {{ end }}
 {{ define "title" }}{{ .Title }} by {{ .Author }}{{ end }}

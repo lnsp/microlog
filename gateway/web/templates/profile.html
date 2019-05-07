@@ -4,9 +4,6 @@
 <div class="profile-biography">
     <h3>
         Biography
-    {{ if .Self }}
-    <small><a href="/profile/edit">edit</a></small>
-    {{ end }}
     </h3>
     <p>{{ .Biography }}</p>
 </div>
@@ -14,19 +11,22 @@
 {{ if .Self }}
 <div class="profile-settings">
     <h3>Settings</h3>
-    <ul class="item-listing">
-        <li><a href="/auth/forgot">reset password</a></li>
-        <li><a href="/auth/delete">delete account</a></li>
-    </ul>
+    <nav class="nav-horizontal nav-actions">
+        <a href="/profile/edit">edit biography</a>
+        <a href="/auth/forgot">reset password</a>
+        <a href="/auth/delete">delete account</a>
+    </nav>
 </div>
 {{ end }}
 <div class="profile-posts">
     <h3>Publications</h3>
     <ul class="item-listing">
         {{ range .Posts }}
-        <li><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a><br><small>on {{ .Date }}</small></li>
+        <li class="item-flex">
+            <div class="item-entry"><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a><br><small>on {{ .Date }}</small></div>
+        </li>
         {{ else }}
-        This user has not published any posts yet.
+        <li class="item-flex"><div class="item-entry">This user has not published any posts yet.</div></li>
         {{ end }}
     </ul>
 </div>

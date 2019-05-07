@@ -2,17 +2,18 @@
 <style>
     table {
         border-collapse: collapse;
-        border-color: #822;
+        border-color: #e8e8e8;
         width: 100%;
     }
-    table, tr, td {
-        border: 1px solid #822;
-    }
     thead {
-        padding: 0.5em;
+        border: none;
+    }
+    th {
+        padding: 1rem 0;
     }
     td {
-        padding: 0.25em 0.5em;
+        padding: 0.5rem 1rem;
+        border: 1px solid #e8e8e8;
     }
 </style>
 <table>
@@ -37,8 +38,10 @@
     <td><a href="/{{ .Reporter }}">{{ .Reporter }}</a></td>
     <td>{{ if .Status }}open{{ else }}closed{{ end }}</td>
     <td>
+        <nav class="nav-horizontal">
         <a href="/moderate/delete/{{ .ID }}">delete</a>
         <a href="/moderate/close/{{ .ID }}">close</a>
+        </nav>
     </td>
 </tr>
 {{ end }}

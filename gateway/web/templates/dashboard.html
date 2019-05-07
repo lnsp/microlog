@@ -2,31 +2,29 @@
 <div class="dashboard-group">
 <h2>
     Popular posts
-    <small class="dashboard-options">
-        this
-        {{ range .PopularOptions }}
-        <a href="/?popular={{ .Name }}" {{ if .Active }}class="active"{{ end }}>
-            {{ .Name }}
-        </a>
-        {{ end }}
-    </small>
 </h2>
-<ul class="item-listing">
+<div class="dashboard-options">
+    {{ range .PopularOptions }}<a href="/?popular={{ .Name }}" {{ if .Active }}class="active"{{ end }}>{{ .Name }}</a>{{ end }}
+</div>
+<div class="item-listing">
     {{ range .PopularPosts }}
-    <li class="item-flex">
+    <div class="item-flex" href="/">
         <div class="item-index">{{ .Likes }}</div>
         <div class="item-body">
-            <a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a> by <a href="/{{ .Author }}">{{ .Author }}</a>
-            <br><small>{{ .Date }}</small>
+            <a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a>
+            <br><small>{{ .Date }} by <a href="/{{ .Author }}">{{ .Author }}</a></small>
         </div>
-    </li>
+    </div>
     {{ end }}
-</ul>
+</div>
+</div>
 <div class="dashboard-group">
 <h2>New members</h2>
 <ul class="item-listing">
     {{ range .LatestUsers }}
-    <li><a href="/{{ .Name }}">{{ .Name }}</a> joined {{ .MemberSince }}</li>
+    <li class="item-flex">
+        <div class="item-entry"><a href="/{{ .Name }}">{{ .Name }}</a> joined {{ .MemberSince }}</div>
+    </li>
     {{ end }}
 </ul>
 </div>

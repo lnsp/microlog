@@ -1,14 +1,14 @@
 {{ define "content" }}
 <form name="post" action="/post" method="POST">
     {{ if .ID }}<input type="hidden" name="id" value="{{ .ID }}">{{ end }}
-    <p>
+    <div class="form-group">
     <label for="title">Title</label>
     <input type="text" name="title" placeholder="Title" value="{{ .Title }}">
-    </p>
-    <p>
+    </div>
+    <div class="form-group">
     <label for="content">Content</label>
     <textarea name="content" placeholder="Hey ho, I want to be filled with content and support Markdown ..." rows="6">{{ .Content }}</textarea>
-    </p>
+    </div>
     {{ if .ID }}
     <input type="submit" value="Update post" class="button">
     {{ else }}

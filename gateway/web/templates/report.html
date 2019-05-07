@@ -4,11 +4,13 @@
     <h3>{{ .Title }} <small>by <a href="/{{ .Author }}">{{ .Author }}</a></small></h3>
 </div>
 <form name="report" method="POST">
-    <p>
-        <label for="reason">Reason for report (abusive language, illegal content, etc.)</label>
-        <input type="text" name="reason" maxlength="240" placeholder="Reason">
-    </p>
+    <div class="form-group">
+       <label for="reason">Reason for report (abusive language, illegal content, etc.)</label>
+       <input type="text" name="reason" maxlength="240" placeholder="Reason">
+    </div>
+    <div class="form-group">
     <input type="submit" value="Send report" class="button">
+    </div>
 </form>
 {{ end }}
 {{ define "title" }}Report post{{ end }}

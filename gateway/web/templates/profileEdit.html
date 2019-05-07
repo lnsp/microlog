@@ -2,12 +2,12 @@
 <h2 class="profile-name">{{ .Name }}</h2>
 <p>
     <form name="profile" action="/profile/edit" method="POST">
-        <p>
+        <div class="form-group">
             <textarea rows="4" name="biography">{{ .Biography }}</textarea>
-            </p>
-            <p>
+        </div>
+        <div class="form-group">
         <input type="submit" value="Update profile" class="button">
-            </p>
+        </div>
     </form>
 </p>
 {{ end }}

@@ -1,34 +1,35 @@
 {{ define "content" }}
 <form name="signup" action="/auth/signup" method="POST">
-    <p>
+    <div class="form-group">
         <label for="username">Username</label>
         <input type="text" name="username" placeholder="Username" value="{{ .Name }}">
-        <br>
-        <small>Your username should only consist of lowercase alphanumerics.</small>
-    </p>
-    <p>
+        <p><small>Your username should only consist of lowercase alphanumerics.</small></p>
+    </div>
+    <div class="form-group">
         <label for="email">Email</label>
         <input type="email" name="email" placeholder="Email" value="{{ .Email }}">
-        <br>
+        <p>
         <small>You will receive a verification email to confirm your account.</small>
-    </p>
-    <p>
+        </p>
+    </div>
+    <div class="form-group">
         <label for="password">Password</label>
         <input type="password" name="password" placeholder="Password" value="{{ .Password }}">
-    </p>
-    <p>
+    </div>
+    <div class="form-group">
         <label for="password_confirm">Password (again)</label>
         <input type="password" name="password_confirm" placeholder="Password (again)" value="{{ .Password }}">
-        <br>
+        <p>
         <small>Your password should have at least 8 characters.</small>
-    </p>
-    <p>
-        <input type="checkbox" name="accept_tos" {{ if .AcceptTOS }}checked{{ end }}>
+        </p>
+    </div>
+    <div>
+        <input type="checkbox" name="accept_tos" id="accept_tos" {{ if .AcceptTOS }}checked{{ end }}>
         <label for="accept_tos" style="display: inline">Accept <a href="/legal/terms-of-service">Terms of Service</a> and <a href="/legal/privacy-policy">Privacy Policy</a></label>
-    </p>
-    <p>
+    </div>
+    <div class="form-group">
         <input type="submit" value="Sign up" class="button">
-    </p>
+    </div>
 </form>
 {{ end }}
 

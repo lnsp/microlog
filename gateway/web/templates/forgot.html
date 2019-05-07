@@ -5,13 +5,13 @@
 </p>
 {{ else }}
 <form name="forgot" action="/auth/forgot" method="POST">
-    <p>
+    <div class="form-group">
         <label for="email">Email</label>
         <input type="email" name="email" placeholder="Email">
-    </p>
-    <p>
+    </div>
+    <div class="form-group">
         <input type="submit" value="Reset password" class="button">
-    </p>
+    </div>
 </form>
 {{ end }}
 {{ end }}
