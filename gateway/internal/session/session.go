@@ -27,7 +27,7 @@ func (session *Client) serviceClient() (api.SessionServiceClient, *grpc.ClientCo
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, session.service, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to dial session service")
+		return nil, nil, errors.Wrapf(err, "failed to dial session service %s", session.service)
 	}
 	service := api.NewSessionServiceClient(conn)
 	return service, conn, nil

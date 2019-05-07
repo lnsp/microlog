@@ -2,11 +2,12 @@ package email
 
 import (
 	"context"
+	"time"
+
 	"github.com/lnsp/microlog/gateway/internal/models"
 	"github.com/lnsp/microlog/mail/api"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"time"
 )
 
 type Client struct {
@@ -26,7 +27,7 @@ func (email *Client) serviceClient() (api.MailServiceClient, *grpc.ClientConn, e
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, email.service, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to dial mail service")
+		return nil, nil, errors.Wrapf(err, "failed to dial mail service %s", email.service)
 	}
 	client := api.NewMailServiceClient(conn)
 	return client, conn, nil
