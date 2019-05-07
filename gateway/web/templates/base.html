@@ -10,8 +10,8 @@
     html, body {
         margin: 0;
         padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-            Ubuntu, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        font-family: Ubuntu, -apple-system, BlinkMacSystemFont, "Segoe UI",
+            Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         background-color: #e8e8e8;
         color: #240041;
         height: 100%;
@@ -30,8 +30,8 @@
         border: none;
         color: #e8e8e8;
         padding: 0.5rem 1rem;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-            Ubuntu, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        font-family: Ubuntu, -apple-system, BlinkMacSystemFont, "Segoe UI",
+            Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         background-color: #240041;
         box-shadow: 0px 2px 0px #ff8260;
     }
@@ -42,11 +42,14 @@
     input {
         padding: 1rem 1.5rem;
     }
+    input:focus {
+        outline: none;
+    }
     input[type=submit] {
         padding: 0.5rem 1rem;
         border-radius: 3px;
-        background: hsl(353, 56%, 49%);
-        box-shadow: 0 5px 0px rgb(117, 40, 49);
+        background: #c23647;
+        box-shadow: 0 5px 0px #752831;
         text-transform: uppercase;
         color: #e8e8e8;
         font-weight: 700;
