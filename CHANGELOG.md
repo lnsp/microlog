@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2019-05-08
+### Changed
+- Complete rework of color scheme
+- New favicon design
+- New contextual form components
+
 ## 2018-11-11
 ### Changed
 - Moved session tokens into separate service
