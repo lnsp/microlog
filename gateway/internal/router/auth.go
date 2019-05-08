@@ -322,7 +322,7 @@ func (router *Router) signupSubmit(w http.ResponseWriter, r *http.Request) {
 		errMessage = "Password must have a minimum length of 8 characters."
 		ctx.Password = ""
 	} else if !router.Data.ValidateName(name) {
-		errMessage = "Username must only consist of alphanumerics."
+		errMessage = "Username must only consist of lowercase alphanumerics."
 		ctx.Name = ""
 	} else if router.Data.EmailExists(email) {
 		errMessage = "Email already exists."
