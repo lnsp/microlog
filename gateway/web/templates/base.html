@@ -138,6 +138,22 @@
     .nav-horizontal a:last-child {
         margin-right: 0;
     }
+    @media (max-width: 600px) {
+        .nav-vertical {
+            margin-left: 0rem;
+            margin-top: 1rem;
+        }
+        .nav-horizontal a {
+            display: block;
+            margin: 0.5rem 0;
+        }
+        nav {
+            font-size: 0.8rem;
+        }
+        footer {
+            flow-direction: column;
+        }
+    }
     .nav-vertical {
         margin-left: 1rem;
     }
@@ -221,6 +237,7 @@
     */
     .content-wrapper {
         margin: 2rem auto;
+        padding: 0 1.5rem;
     }
     .error-wrapper {
         margin: 2rem auto 0rem auto;
