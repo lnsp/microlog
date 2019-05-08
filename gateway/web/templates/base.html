@@ -139,11 +139,11 @@
         margin-right: 0;
     }
     @media (max-width: 600px) {
-        .nav-vertical {
-            margin-left: 0rem;
+        footer .nav-vertical {
+            margin-left: 0rem !important;
             margin-top: 1rem;
         }
-        .nav-horizontal a {
+        header .nav-horizontal a {
             display: block;
             margin: 0.5rem 0;
         }
@@ -151,7 +151,7 @@
             font-size: 0.8rem;
         }
         footer {
-            flow-direction: column;
+            flex-direction: column !important;
         }
     }
     .nav-vertical {
