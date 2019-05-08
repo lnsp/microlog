@@ -18,6 +18,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 		return &Context{
 			SignedIn:     false,
 			HeadControls: true,
+			CurrentYear:  time.Now().Year,
 		}
 	}
 	id, mod, err := router.Session.Verify(sessionCookie.Value)
@@ -29,6 +30,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 		return &Context{
 			SignedIn:     false,
 			HeadControls: true,
+			CurrentYear:  time.Now().Year,
 		}
 	}
 	return &Context{
@@ -36,6 +38,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 		UserID:       id,
 		HeadControls: true,
 		Moderator:    mod,
+		CurrentYear:  time.Now().Year,
 	}
 }
 

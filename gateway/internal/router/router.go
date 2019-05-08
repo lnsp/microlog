@@ -1,11 +1,12 @@
 package router
 
 import (
-	"github.com/lnsp/microlog/common"
-	"github.com/lnsp/microlog/gateway/internal/session"
 	"html/template"
 	"net/http"
 	"regexp"
+
+	"github.com/lnsp/microlog/common"
+	"github.com/lnsp/microlog/gateway/internal/session"
 
 	"github.com/gorilla/mux"
 	"github.com/lnsp/microlog/gateway/internal/email"
@@ -121,6 +122,7 @@ type Context struct {
 	SignedIn     bool
 	UserID       uint
 	Moderator    bool
+	CurrentYear  int
 }
 
 type Router struct {
