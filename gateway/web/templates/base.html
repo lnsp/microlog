@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1.0">
+    <meta name="viewport" content="initial-scale=1.0,width=device-width,user-scalable=no">
     <title>{{ template "title" . }} – microlog</title>
     <link rel="shortcut icon" type="image/png" href="/favicon.ico">
     <style>
@@ -12,8 +12,8 @@
         padding: 0;
         font-family: Ubuntu, -apple-system, BlinkMacSystemFont, "Segoe UI",
             Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        background-color: #e8e8e8;
-        color: #240041;
+        background-color: #240041;
+        color: #e8e8e8;
         height: 100%;
     }
     .site-wrapper {
@@ -35,9 +35,10 @@
             Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         background-color: #240041;
         box-shadow: 0px 2px 0px #ff8260;
-        -webkit-appearance: none
+        -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
+        border-radius: 0;
     }
     textarea {
         width: 100%;
@@ -193,6 +194,10 @@
         align-items: center;
         flex-direction: row;
     }
+    .site-brand-dark svg {
+        fill: hsl(272, 70%, 4%);
+        height: 1.5rem;
+    }
     .brand {
         display: inline-block;
         font-size: 2rem;
@@ -317,7 +322,7 @@
 </head>
 <body>
     <div class="site-wrapper">
-    <div class="blue-wrapper">
+    <div class="blue-wrapper header-wrapper">
         <header class="container">
             <div class="brand">
                 <a href="/" class="site-brand">
@@ -358,7 +363,9 @@
     </div>
     <div class="blue-wrapper footer-wrapper">
     <footer class="container">
-        <div class="footer-copyright">(c) {{ .CurrentYear }} microlog. All rights reserved.</div>
+        <div class="footer-copyright">
+            <div>(c) {{ .CurrentYear }} microlog. All rights reserved.</div>
+        </div>
         <nav class="nav-vertical footer-links">
             <a href="/changelog">Changelog</a>
             <a href="/legal/terms-of-service">Terms Of Service</a>
