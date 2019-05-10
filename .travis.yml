@@ -6,7 +6,7 @@ script:
 deploy:
 - provider: script
   skip_cleanup: true
-  script: ssh root@microlog.co "deploy_microlog.sh $TRAVIS_BRANCH $TRAVIS_TAG"
+  script: ssh root@microlog.co "/root/deploy_microlog.sh $TRAVIS_BRANCH $TRAVIS_TAG"
 before_install:
 - openssl aes-256-cbc -K $encrypted_20c066664120_key -iv $encrypted_20c066664120_iv
   -in secrets/travis_rsa.enc -out /tmp/travis_rsa -d
