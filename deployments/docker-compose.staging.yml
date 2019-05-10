@@ -9,6 +9,6 @@ services:
   web_db:
     env_file: .env.staging
   web:
+    env_file: .env.staging
     ports:
       - "8081:8080"
-    env_file: .env.staging
