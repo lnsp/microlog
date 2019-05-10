@@ -34,8 +34,6 @@ services:
     depends_on:
       - web_db
     restart: always
-    ports:
-      - "8080:8080"
     volumes:
       - ./micro.db:/app/micro.db
     env_file: .env
