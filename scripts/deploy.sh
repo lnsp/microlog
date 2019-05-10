@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 STAGE=$1
 TAG=$2
