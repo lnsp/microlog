@@ -1,5 +1,7 @@
 # microlog
 
+[![Build Status](https://travis-ci.com/lnsp/microlog.svg?token=LqZfkQKrVSBE6pgAPyCG&branch=master)](https://travis-ci.com/lnsp/microlog)
+
 microlog is a dead-simple micrologging engine with an absolute minimalistic user experience. It is usable on mobile, desktop and tablets and aims to be universally usable no matter the handicap.
 
 ## Architecture
