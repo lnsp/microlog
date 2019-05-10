@@ -17,6 +17,6 @@ else
     git pull
 fi
 
-docker-compose up -d -f deployments/docker-compose.yml -f deployments/docker-compose.$STAGE.yml -p $PREFIX --build
+docker-compose -f docker-compose.yml -f deployments/docker-compose.$STAGE.yml -p $PREFIX up -d --build
 
 echo "OK."
