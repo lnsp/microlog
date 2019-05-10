@@ -1,0 +1,45 @@
+version: '3.5'
+services:
+  session:
+    build:
+      context: .
+      dockerfile: session/Dockerfile
+    depends_on:
+    - session_db
+    env_file: .env
+    restart: always
+    ports:
+      - "8082:8080"
+  session_db:
+    image: redis:alpine
+    env_file: .env
+    volumes:
+      - "/data"
+    command: ["sh", "-c", "exec redis-server --requirepass \"$$SESSION_REDISPASSWORD\""]
+    restart: always
+  mail:
+    build:
+      context: .
+      dockerfile: mail/Dockerfile
+    env_file: .env
+    restart: always
+    ports:
+      - "8081:8080"
+  web_db:
+    image: postgres
+    volumes:
+      - /var/lib/postgresql/data
+    env_file: .env
+    restart: always
+    ports:
+      - "5432:5432"
+#  web:
+#      build:
+#        context: .
+#        dockerfile: gateway/Dockerfile
+#      depends_on:
+#        - web_db
+#      restart: always
+#      ports:
+#        - "8080:8080"
+#      env_file: .env
