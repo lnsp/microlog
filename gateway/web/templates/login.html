@@ -71,7 +71,7 @@ input[type=submit] {
 </div>
 {{ end }}
 <form name="login" action="/auth/login" method="POST">
-    {{ .CSRFToken }}
+    {{ .CSRFToken }}
     <div class="form-group">
     <label for="email">Email</label>
     <input type="email" name="email" placeholder="Email address">
