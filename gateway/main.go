@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/lnsp/microlog/common"
-	"github.com/lnsp/microlog/gateway/internal/session"
 	"net/http"
 	"time"
+
+	"github.com/lnsp/microlog/common"
+	"github.com/lnsp/microlog/gateway/internal/session"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
@@ -23,6 +24,7 @@ type specification struct {
 	Minify         bool   `default:"false" desc:"Minify all responses"`
 	EmailService   string `default:"mail:8080" desc:"Email service host"`
 	SessionService string `default:"session:8080" desc:"Session service host"`
+	CsrfAuthKey    string `default:"csrf-auth-key" desc:"CSRF validation key"`
 }
 
 func main() {
@@ -42,7 +44,8 @@ func main() {
 		SessionClient: session.NewClient(dataSource, spec.SessionService),
 		DataSource:    dataSource,
 		PublicAddress: spec.PublicAddr,
-		Minify:        true,
+		Minify:        spec.Minify,
+		CsrfAuthKey:   []byte(spec.CsrfAuthKey),
 	})
 	server := &http.Server{
 		Handler:           logger(handler),

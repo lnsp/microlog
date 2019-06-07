@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/csrf"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -13,12 +15,14 @@ type emailContext struct {
 }
 
 func (router *Router) defaultContext(r *http.Request) *Context {
+	csrfToken := csrf.TemplateField(r)
 	sessionCookie, err := r.Cookie(sessionCookieName)
 	if err != nil {
 		return &Context{
 			SignedIn:     false,
 			HeadControls: true,
 			CurrentYear:  time.Now().Year(),
+			CSRFToken:    csrfToken,
 		}
 	}
 	id, mod, err := router.Session.Verify(sessionCookie.Value)
@@ -31,6 +35,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 			SignedIn:     false,
 			HeadControls: true,
 			CurrentYear:  time.Now().Year(),
+			CSRFToken:    csrfToken,
 		}
 	}
 	return &Context{
@@ -39,6 +44,7 @@ func (router *Router) defaultContext(r *http.Request) *Context {
 		HeadControls: true,
 		Moderator:    mod,
 		CurrentYear:  time.Now().Year(),
+		CSRFToken:    csrfToken,
 	}
 }
 

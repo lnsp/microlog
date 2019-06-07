@@ -8,6 +8,7 @@ import (
 	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/gateway/internal/session"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/lnsp/microlog/gateway/internal/email"
 	"github.com/lnsp/microlog/gateway/internal/models"
@@ -58,6 +59,7 @@ type Config struct {
 	DataSource    *models.DataSource
 	PublicAddress string
 	Minify        bool
+	CsrfAuthKey   []byte
 }
 
 func New(cfg Config) http.Handler {
@@ -101,7 +103,7 @@ func New(cfg Config) http.Handler {
 	serveMux.HandleFunc("/{user}/{post}/report", router.report).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/report", router.reportSubmit).Methods("POST")
 	serveMux.HandleFunc("/{user}/{post}/like", router.like).Methods("GET")
-	return serveMux
+	return csrf.Protect(cfg.CsrfAuthKey)(serveMux)
 }
 
 var minifier *minify.M
@@ -123,6 +125,7 @@ type Context struct {
 	UserID       uint
 	Moderator    bool
 	CurrentYear  int
+	CSRFToken    template.HTML
 }
 
 type Router struct {
