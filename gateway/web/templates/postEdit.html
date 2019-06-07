@@ -1,5 +1,6 @@
 {{ define "content" }}
 <form name="post" action="/post" method="POST">
+    {{ .CSRFToken }}
     {{ if .ID }}<input type="hidden" name="id" value="{{ .ID }}">{{ end }}
     <div class="form-group">
     <label for="title">Title</label>

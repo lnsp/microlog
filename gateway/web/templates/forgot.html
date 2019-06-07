@@ -5,6 +5,7 @@
 </p>
 {{ else }}
 <form name="forgot" action="/auth/forgot" method="POST">
+    {{ .CSRFToken }}
     <div class="form-group">
         <label for="email">Email</label>
         <input type="email" name="email" placeholder="Email">

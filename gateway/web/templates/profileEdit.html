@@ -2,6 +2,7 @@
 <h2 class="profile-name">{{ .Name }}</h2>
 <p>
     <form name="profile" action="/profile/edit" method="POST">
+        {{ .CSRFToken }}
         <div class="form-group">
             <textarea rows="4" name="biography">{{ .Biography }}</textarea>
         </div>

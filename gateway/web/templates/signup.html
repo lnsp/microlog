@@ -71,6 +71,7 @@ input[type=submit] {
 </div>
 {{ end }}
 <form name="signup" action="/auth/signup" method="POST">
+    {{ .CSRFToken }}
     <div class="form-group">
         <label for="username">Username</label>
         <input type="text" name="username" placeholder="Username" value="{{ .Name }}">
