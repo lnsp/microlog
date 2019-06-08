@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2019-06-09
+### Added
+- Protection against CSRF attacks is enabled by default
+
 ## 2019-05-08
 ### Changed
 - Complete rework of color scheme
