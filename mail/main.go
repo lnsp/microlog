@@ -4,7 +4,7 @@ import (
 	"net"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/lnsp/microlog/common"
+	"github.com/lnsp/microlog/common/logger"
 	"github.com/lnsp/microlog/mail/api"
 	"github.com/lnsp/microlog/mail/internal/mail"
 	"google.golang.org/grpc"
@@ -21,7 +21,7 @@ type specification struct {
 	SenderEmail string `default:"team@microlog.co" desc:"The default sender email"`
 }
 
-var log = common.Logger()
+var log = logger.New()
 
 func main() {
 	var spec specification
@@ -34,7 +34,7 @@ func main() {
 		log.WithError(err).Fatal("could not setup networking")
 	}
 	grpcServer := grpc.NewServer()
-	api.RegisterMailServiceServer(grpcServer, mail.NewServer(&mail.Config{
+	mailServer := mail.NewServer(&mail.Config{
 		APIKey:         spec.APIKey,
 		TemplateFolder: spec.Templates,
 		ConfirmURL:     spec.ConfirmURL,
@@ -42,7 +42,8 @@ func main() {
 		SenderName:     spec.SenderName,
 		SenderEmail:    spec.SenderEmail,
 		Secret:         []byte(spec.Secret),
-	}))
+	})
+	api.RegisterMailServer(grpcServer, mailServer)
 	if err := grpcServer.Serve(listener); err != nil {
 		log.WithError(err).Fatal("could not serve")
 	}

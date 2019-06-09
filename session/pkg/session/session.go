@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	"github.com/lnsp/microlog/common"
+	"github.com/lnsp/microlog/common/logger"
 	"github.com/lnsp/microlog/session/api"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -24,7 +24,7 @@ type Server struct {
 	expiration time.Duration
 }
 
-var log = common.Logger()
+var log = logger.New()
 
 func (svc *Server) Create(ctx context.Context, req *api.CreateRequest) (*api.CreateResponse, error) {
 	log := log.WithFields(logrus.Fields{

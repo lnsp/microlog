@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lnsp/microlog/common"
+	"github.com/lnsp/microlog/common/logger"
 	"github.com/lnsp/microlog/gateway/internal/session"
 
 	"github.com/kelseyhightower/envconfig"
@@ -15,7 +15,7 @@ import (
 	"github.com/lnsp/microlog/gateway/internal/router"
 )
 
-var log = common.Logger()
+var log = logger.New()
 
 type specification struct {
 	PublicAddr     string `default:"localhost:8080" desc:"Public address the server is reachable on"`
@@ -48,7 +48,7 @@ func main() {
 		CsrfAuthKey:   []byte(spec.CsrfAuthKey),
 	})
 	server := &http.Server{
-		Handler:           logger(handler),
+		Handler:           log.Middleware(handler),
 		Addr:              spec.Addr,
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
@@ -60,16 +60,4 @@ func main() {
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.WithError(err).Fatal("failed to listen")
 	}
-}
-
-func logger(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t := time.Now()
-		h.ServeHTTP(w, r)
-		log.WithRequest(r).WithFields(logrus.Fields{
-			"responseTime": time.Since(t).Seconds() * 1000.,
-			"method":       r.Method,
-			"path":         r.URL.Path,
-		}).Debug("handled request")
-	})
 }

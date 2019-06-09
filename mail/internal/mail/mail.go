@@ -7,17 +7,22 @@ import (
 	"html/template"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/dgrijalva/jwt-go"
-	"github.com/lnsp/microlog/common"
+	"github.com/lnsp/microlog/common/logger"
 	"github.com/lnsp/microlog/mail/api"
 	"github.com/pkg/errors"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+
+	health "google.golang.org/grpc/health/grpc_health_v1"
 )
 
-var log = common.Logger()
+var log = logger.New()
 
 const (
 	resetSubject   = "Reset your email"
@@ -218,6 +223,29 @@ func (s *Server) SendPasswordReset(ctx context.Context, req *api.MailRequest) (*
 	}, nil
 }
 
+// HealthServer provides an implementation of the GRPC Health Checking Protocol.
+func (s *Server) HealthServer() health.HealthServer {
+	return &healthServer{s}
+}
+
+type healthServer struct {
+	s *Server
+}
+
+func (h *healthServer) Check(ctx context.Context, req *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {
+	// We will ignore the service parameter for now since we only implement one service per package.
+	// Check for sendgrid if everything works since mail is important
+	_, err := sendgrid.MakeRequest(sendgrid.GetRequest(h.s.apiKey, "/api/v3/alerts", ""))
+	if err != nil {
+		return &health.HealthCheckResponse{Status: health.HealthCheckResponse_NOT_SERVING}, nil
+	}
+	return &health.HealthCheckResponse{Status: health.HealthCheckResponse_SERVING}, nil
+}
+
+func (h *healthServer) Watch(req *health.HealthCheckRequest, stream health.Health_WatchServer) error {
+	return status.Error(codes.Unimplemented, "watch is not implemented")
+}
+
 // NewServer sets up a new gRPC server instance.
 func NewServer(cfg *Config) *Server {
 	forgotTemplate := template.Must(template.ParseFiles(cfg.TemplateFolder + "/forgot.html"))
@@ -225,6 +253,7 @@ func NewServer(cfg *Config) *Server {
 	return &Server{
 		sender:          mail.NewEmail(cfg.SenderName, cfg.SenderEmail),
 		mail:            sendgrid.NewSendClient(cfg.APIKey),
+		apiKey:          cfg.APIKey,
 		forgotTemplate:  forgotTemplate,
 		confirmTemplate: confirmTemplate,
 		resetURL:        cfg.ResetURL,

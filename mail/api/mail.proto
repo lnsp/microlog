@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api;
 
-service MailService {
+service Mail {
     rpc SendConfirmation(MailRequest) returns (MailResponse) {}
     rpc SendPasswordReset(MailRequest) returns (MailResponse) {}
     rpc VerifyToken(VerificationRequest) returns (VerificationResponse) {}

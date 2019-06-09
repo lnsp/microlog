@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/lnsp/microlog/common"
+	"github.com/lnsp/microlog/common/logger"
 	"github.com/lnsp/microlog/session/api"
 	"github.com/lnsp/microlog/session/pkg/session"
 	"google.golang.org/grpc"
 )
 
-var log = common.Logger()
+var log = logger.New()
 
 type specification struct {
 	Secret        string `required:"true" desc:"Signing key for session tokens"`

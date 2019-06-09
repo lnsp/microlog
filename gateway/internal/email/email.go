@@ -22,14 +22,14 @@ func NewClient(dataSource *models.DataSource, mailService string) *Client {
 	}
 }
 
-func (email *Client) serviceClient() (api.MailServiceClient, *grpc.ClientConn, error) {
+func (email *Client) serviceClient() (api.MailClient, *grpc.ClientConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, email.service, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "failed to dial mail service %s", email.service)
 	}
-	client := api.NewMailServiceClient(conn)
+	client := api.NewMailClient(conn)
 	return client, conn, nil
 }
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/lnsp/microlog/common"
+	"github.com/lnsp/microlog/common/logger"
 	"github.com/lnsp/microlog/gateway/internal/session"
 
 	"github.com/gorilla/csrf"
@@ -29,7 +29,7 @@ const (
 	dashboardUsersLimit = 5
 )
 
-var log = common.Logger()
+var log = logger.New()
 
 var (
 	signupSuccessTemplate  = template.Must(template.ParseFiles("./web/templates/base.html", "./web/templates/signupSuccess.html"))
