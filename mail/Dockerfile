@@ -11,8 +11,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -installsuffix cgo -ldflags='-w -s' -o /go/bin/mail
 
 # Copy into scratch image
-FROM golang:alpine
-ADD ./mail/templates /app/templates
+FROM alpine:3.9
+COPY ./mail/templates /app/templates
 COPY --from=builder /go/bin/mail /app/mail
 
 # Install grpc_health_probe
