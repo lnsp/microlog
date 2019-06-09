@@ -28,6 +28,7 @@ type dashboardContext struct {
 	PopularPosts   []dashboardPost
 	LatestUsers    []dashboardUser
 	PopularOptions []dashboardOption
+	PopularMode    string
 }
 
 const (
@@ -47,16 +48,19 @@ func (router *Router) dashboardContext(r *http.Request) *dashboardContext {
 		ctx.PopularOptions = []dashboardOption{
 			{"week", false}, {"month", true}, {"year", false},
 		}
+		ctx.PopularMode = "month"
 	case "year":
 		timeInterval = -timeYear
 		ctx.PopularOptions = []dashboardOption{
 			{"week", false}, {"month", false}, {"year", true},
 		}
+		ctx.PopularMode = "year"
 	default:
 		timeInterval = -timeWeek
 		ctx.PopularOptions = []dashboardOption{
 			{"week", true}, {"month", false}, {"year", false},
 		}
+		ctx.PopularMode = "week"
 	}
 	popularPosts, err := router.Data.PopularPosts(time.Now().Add(timeInterval), dashboardPostsLimit)
 	if err != nil {

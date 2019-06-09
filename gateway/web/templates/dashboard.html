@@ -15,6 +15,8 @@
             <br><small>{{ .Date }} by <a href="/{{ .Author }}">{{ .Author }}</a></small>
         </div>
     </div>
+    {{ else }}
+    <div class="item-flex"><div class="item-entry">There have not been any posts published in the last {{ .PopularMode }}.</div></div>
     {{ end }}
 </div>
 </div>
