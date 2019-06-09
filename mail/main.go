@@ -3,6 +3,8 @@ package main
 import (
 	"net"
 
+	health "google.golang.org/grpc/health/grpc_health_v1"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/lnsp/microlog/common/logger"
 	"github.com/lnsp/microlog/mail/api"
@@ -44,6 +46,7 @@ func main() {
 		Secret:         []byte(spec.Secret),
 	})
 	api.RegisterMailServer(grpcServer, mailServer)
+	health.RegisterHealthServer(grpcServer, mailServer.Health())
 	if err := grpcServer.Serve(listener); err != nil {
 		log.WithError(err).Fatal("could not serve")
 	}

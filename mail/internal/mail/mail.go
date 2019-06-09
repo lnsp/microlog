@@ -223,8 +223,8 @@ func (s *Server) SendPasswordReset(ctx context.Context, req *api.MailRequest) (*
 	}, nil
 }
 
-// HealthServer provides an implementation of the GRPC Health Checking Protocol.
-func (s *Server) HealthServer() health.HealthServer {
+// Health provides an implementation of the GRPC Health Checking Protocol.
+func (s *Server) Health() health.HealthServer {
 	return &healthServer{s}
 }
 
