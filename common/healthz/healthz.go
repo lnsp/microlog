@@ -23,7 +23,7 @@ func (e *Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		StatusCode int      `json:"-"`
 		Errors     []string `json:"errors"`
 	}{
-		"healthy", 200, make([]string, 0),
+		"healthy", http.StatusOK, make([]string, 0),
 	}
 	for _, check := range e.Checks {
 		if err := check(); err != nil {
