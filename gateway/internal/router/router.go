@@ -60,6 +60,7 @@ type Config struct {
 	PublicAddress string
 	Minify        bool
 	CsrfAuthKey   []byte
+	CsrfSecure    bool
 }
 
 func New(cfg Config) http.Handler {
@@ -103,7 +104,7 @@ func New(cfg Config) http.Handler {
 	serveMux.HandleFunc("/{user}/{post}/report", router.report).Methods("GET")
 	serveMux.HandleFunc("/{user}/{post}/report", router.reportSubmit).Methods("POST")
 	serveMux.HandleFunc("/{user}/{post}/like", router.like).Methods("GET")
-	return csrf.Protect(cfg.CsrfAuthKey)(serveMux)
+	return csrf.Protect(cfg.CsrfAuthKey, csrf.Secure(cfg.CsrfSecure))(serveMux)
 }
 
 var minifier *minify.M

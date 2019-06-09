@@ -25,6 +25,7 @@ type specification struct {
 	EmailService   string `default:"mail:8080" desc:"Email service host"`
 	SessionService string `default:"session:8080" desc:"Session service host"`
 	CsrfAuthKey    string `default:"csrf-auth-key" desc:"CSRF validation key"`
+	CsrfSecure     bool   `default:"secure" desc:"CSRF HTTPS only"`
 }
 
 func main() {
@@ -46,6 +47,7 @@ func main() {
 		PublicAddress: spec.PublicAddr,
 		Minify:        spec.Minify,
 		CsrfAuthKey:   []byte(spec.CsrfAuthKey),
+		CsrfSecure:    spec.CsrfSecure,
 	})
 	server := &http.Server{
 		Handler:           log.Middleware(handler),
