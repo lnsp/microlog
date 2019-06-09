@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## 2019-06-09
 ### Added
 - Protection against CSRF attacks is enabled by default
+- Display message if there have not been published any posts in the selected dashboard interval
 
 ## 2019-05-08
 ### Changed
