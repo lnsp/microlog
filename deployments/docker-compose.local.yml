@@ -33,13 +33,13 @@ services:
     restart: always
     ports:
       - "5432:5432"
-#  web:
-#      build:
-#        context: .
-#        dockerfile: gateway/Dockerfile
-#      depends_on:
-#        - web_db
-#      restart: always
-#      ports:
-#        - "8080:8080"
-#      env_file: .env
+  web:
+      build:
+        context: .
+        dockerfile: gateway/Dockerfile
+      depends_on:
+        - web_db
+      restart: always
+      ports:
+        - "8080:8080"
+      env_file: .env
