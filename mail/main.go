@@ -6,7 +6,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/mail/api"
-	"github.com/lnsp/microlog/mail/pkg/mail"
+	"github.com/lnsp/microlog/mail/internal/mail"
 	"google.golang.org/grpc"
 )
 

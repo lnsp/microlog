@@ -1,8 +1,12 @@
+// Package mail provides a GRPC service for sending transactional emails.
 package mail
 
 import (
 	"bytes"
 	"fmt"
+	"html/template"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lnsp/microlog/common"
 	"github.com/lnsp/microlog/mail/api"
@@ -11,8 +15,6 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"html/template"
-	"time"
 )
 
 var log = common.Logger()
@@ -22,6 +24,7 @@ const (
 	confirmSubject = "Please confirm your email"
 )
 
+// Config stores the service configuration.
 type Config struct {
 	Secret                  []byte
 	ConfirmURL, ResetURL    string
@@ -30,6 +33,7 @@ type Config struct {
 	TemplateFolder          string
 }
 
+// Server is the implementation of the mail gRPC service.
 type Server struct {
 	secret                          []byte
 	sender                          *mail.Email
@@ -39,30 +43,37 @@ type Server struct {
 	confirmURL, resetURL            string
 }
 
+// EmailPurpose defines a transaction email purpose.
 type EmailPurpose string
 
 const (
-	EmailConfirmation  EmailPurpose = "purpose_confirmation"
-	EmailPasswordReset              = "purpose_resetpassword"
+	// EmailConfirmation is an account confimation email.
+	EmailConfirmation EmailPurpose = "purpose_confirmation"
+	// EmailPasswordReset is a password reset email.
+	EmailPasswordReset = "purpose_resetpassword"
 )
 
 var (
+	// ExpirationTimes defines the expiration times of special-purpose tokens.
 	ExpirationTimes = map[EmailPurpose]time.Duration{
 		EmailConfirmation:  time.Hour * 72,
 		EmailPasswordReset: time.Hour,
 	}
+	// MapPurpose defines a map of verification request purposes to EmailPurposes.
 	MapPurpose = map[api.VerificationRequest_Purpose]EmailPurpose{
 		api.VerificationRequest_CONFIRMATION:   EmailConfirmation,
 		api.VerificationRequest_PASSWORD_RESET: EmailPasswordReset,
 	}
 )
 
+// EmailInfo stores general information about the email.
 type EmailInfo struct {
 	Identity     uint32
 	EmailAddress string
 	Purpose      EmailPurpose
 }
 
+// Claims stores email info in a JWT-compatible way.
 type Claims struct {
 	jwt.StandardClaims
 	EmailInfo
@@ -72,6 +83,7 @@ type emailContext struct {
 	Name, Link string
 }
 
+// GenerateToken generates a new token based on the given email information.
 func (s *Server) GenerateToken(info *EmailInfo) (string, error) {
 	expiration := ExpirationTimes[info.Purpose]
 	claims := &Claims{
@@ -88,6 +100,7 @@ func (s *Server) GenerateToken(info *EmailInfo) (string, error) {
 	return signed, nil
 }
 
+// ProofToken checks if the given token string is valid.
 func (s *Server) ProofToken(signed string) (*EmailInfo, error) {
 	var claims Claims
 	_, err := jwt.ParseWithClaims(signed, &claims, func(token *jwt.Token) (interface{}, error) {
@@ -102,6 +115,7 @@ func (s *Server) ProofToken(signed string) (*EmailInfo, error) {
 	return &claims.EmailInfo, nil
 }
 
+// VerifyToken verifies the given special-purpose token.
 func (s *Server) VerifyToken(ctx context.Context, req *api.VerificationRequest) (*api.VerificationResponse, error) {
 	log := log.WithFields(logrus.Fields{
 		"purpose": req.Purpose,
@@ -126,6 +140,7 @@ func (s *Server) VerifyToken(ctx context.Context, req *api.VerificationRequest) 
 	}, nil
 }
 
+// SendConfirmation sends a account confirmation email.
 func (s *Server) SendConfirmation(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
 	log := log.WithFields(logrus.Fields{
 		"email":    req.Email,
@@ -164,6 +179,7 @@ func (s *Server) SendConfirmation(ctx context.Context, req *api.MailRequest) (*a
 	}, nil
 }
 
+// SendPasswordReset sends a password reset email.
 func (s *Server) SendPasswordReset(ctx context.Context, req *api.MailRequest) (*api.MailResponse, error) {
 	log := log.WithFields(logrus.Fields{
 		"email":    req.Email,
@@ -202,6 +218,7 @@ func (s *Server) SendPasswordReset(ctx context.Context, req *api.MailRequest) (*
 	}, nil
 }
 
+// NewServer sets up a new gRPC server instance.
 func NewServer(cfg *Config) *Server {
 	forgotTemplate := template.Must(template.ParseFiles(cfg.TemplateFolder + "/forgot.html"))
 	confirmTemplate := template.Must(template.ParseFiles(cfg.TemplateFolder + "/confirm.html"))
