@@ -1,26 +1,28 @@
 # Start up builder image
-FROM golang:alpine as builder
+FROM golang:1.12-alpine as builder
 RUN apk update && apk add git
 
-# Build app
-ENV GO111MODULE=off
-COPY . /go/src/github.com/lnsp/microlog
-WORKDIR /go/src/github.com/lnsp/microlog/session
-RUN go get -d -v
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -a -installsuffix cgo -ldflags='-w -s' -o /go/bin/session
-
-# Copy into scratch image
-FROM alpine:3.9
-COPY --from=builder /go/bin/session /app/session
-
-# Install grpc_health_probe
+# Download grpc_health_probe
 RUN GRPC_HEALTH_PROBE_VERSION=v0.3.0 && \
     wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
     chmod +x /bin/grpc_health_probe
 
-# Run as non-root
-RUN adduser -S microlog
-USER microlog
+# Install dependencies
+RUN mkdir -p /src
+WORKDIR /src
+COPY go.mod /src
+COPY go.sum /src
+RUN go mod download
 
-ENTRYPOINT ["/app/session"]
+# Copy source code and build
+COPY . .
+WORKDIR /src/session
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -installsuffix cgo -ldflags='-w -s' -o /bin/session
+
+# Copy into scratch image
+FROM scratch
+WORKDIR /app
+COPY --from=builder /bin/session /session
+COPY --from=builder /bin/grpc_health_probe /grpc_health_probe
+ENTRYPOINT ["/session"]

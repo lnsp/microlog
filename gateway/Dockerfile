@@ -1,19 +1,24 @@
 # Start up builder image
-FROM golang:alpine as builder
+FROM golang:1.12-alpine as builder
 RUN apk update && apk add git
 
-# Build app
-ENV GO111MODULE=off
-COPY . /go/src/github.com/lnsp/microlog
-WORKDIR /go/src/github.com/lnsp/microlog/gateway
-RUN go get -d -v
-RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -a -installsuffix cgo -ldflags='-w -s' -o /go/bin/gateway
+# Install dependencies
+RUN mkdir -p /src
+WORKDIR /src
+COPY go.mod /src
+COPY go.sum /src
+RUN go mod download
+
+# Copy source code and build
+COPY . .
+WORKDIR /src/gateway
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -installsuffix cgo -ldflags='-w -s' -o /bin/gateway
 
 # Copy into scratch image
 FROM scratch
-ADD ./gateway/web /app/web
-ADD ./CHANGELOG.md /app/CHANGELOG.md
-COPY --from=builder /go/bin/gateway /app/gateway
 WORKDIR /app
-ENTRYPOINT ["/app/gateway"]
+COPY --from=builder /src/CHANGELOG.md /app/CHANGELOG.md
+COPY --from=builder /src/gateway/web /app/web
+COPY --from=builder /bin/gateway /gateway
+ENTRYPOINT ["/gateway"]
