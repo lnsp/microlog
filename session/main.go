@@ -4,10 +4,12 @@ import (
 	"net"
 	"time"
 
+	health "google.golang.org/grpc/health/grpc_health_v1"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/lnsp/microlog/common/logger"
 	"github.com/lnsp/microlog/session/api"
-	"github.com/lnsp/microlog/session/pkg/session"
+	"github.com/lnsp/microlog/session/internal/session"
 	"google.golang.org/grpc"
 )
 
@@ -31,14 +33,19 @@ func main() {
 	if err != nil {
 		log.WithError(err).Fatal("could not setup networking")
 	}
-	grpcServer := grpc.NewServer()
 	expirationTime, err := time.ParseDuration(spec.Expiration)
-	api.RegisterSessionServiceServer(grpcServer, session.NewServer(&session.Config{
+	if err != nil {
+		log.WithError(err).Fatal("bad expiration time format")
+	}
+	grpcServer := grpc.NewServer()
+	sessionServer := session.NewServer(&session.Config{
 		Secret:         []byte(spec.Secret),
 		RedisAddr:      spec.Redis,
 		RedisPassword:  spec.RedisPassword,
 		ExpirationTime: expirationTime,
-	}))
+	})
+	api.RegisterSessionServer(grpcServer, sessionServer)
+	health.RegisterHealthServer(grpcServer, sessionServer.Health())
 	if err := grpcServer.Serve(listener); err != nil {
 		log.WithError(err).Fatal("failed to serve")
 	}

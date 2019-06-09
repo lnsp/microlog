@@ -22,14 +22,14 @@ func NewClient(dataSource *models.DataSource, sessionService string) *Client {
 	}
 }
 
-func (session *Client) serviceClient() (api.SessionServiceClient, *grpc.ClientConn, error) {
+func (session *Client) serviceClient() (api.SessionClient, *grpc.ClientConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, session.service, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "failed to dial session service %s", session.service)
 	}
-	service := api.NewSessionServiceClient(conn)
+	service := api.NewSessionClient(conn)
 	return service, conn, nil
 }
 

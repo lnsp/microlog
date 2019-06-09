@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api;
 
-service SessionService {
+service Session {
     rpc Create(CreateRequest) returns (CreateResponse) {}
     rpc Verify(VerifyRequest) returns (VerifyResponse) {}
     rpc Delete(DeleteRequest) returns (DeleteResponse) {}
