@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package microlog.profile.v1;
+option go_package = "api";
+
+service Profile {
+    rpc Create(ProfileCreateRequest) returns (ProfileCreateResponse) {}
+    rpc Delete(ProfileDeleteRequest) returns (ProfileDeleteResponse) {}
+    rpc Get(ProfileGetRequest) returns (ProfileResponse) {}
+    rpc UpdateDisplayName(ProfileUpdateRequest) returns (ProfileResponse) {}
+    rpc UpdateBiography(ProfileUpdateRequest) returns (ProfileResponse) {}
+    rpc UpdateImage(ProfileUpdateRequest) returns (ProfileResponse) {}
+}
+
+message ProfileCreateRequest {
+    uint32 id = 1;
+    string displayName = 2;
+}
+
+message ProfileCreateResponse {}
+
+message ProfileDeleteRequest {
+    uint32 id = 1;
+}
+
+message ProfileDeleteResponse {}
+
+message ProfileGetRequest {
+    uint32 id = 1;
+}
+
+message ProfileUpdateRequest {
+    uint32 id = 1;
+    string displayName = 2;
+    string biography = 3;
+    bytes image = 4;
+}
+
+message ProfileResponse {
+    uint32 id = 1;
+    string displayName = 2;
+    string biography = 3;
+    string imageURL = 4;
+}
