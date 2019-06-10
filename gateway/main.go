@@ -25,7 +25,7 @@ type specification struct {
 	EmailService   string `default:"mail:8080" desc:"Email service host"`
 	SessionService string `default:"session:8080" desc:"Session service host"`
 	CsrfAuthKey    string `default:"csrf-auth-key" desc:"CSRF validation key"`
-	CsrfSecure     bool   `default:"secure" desc:"CSRF HTTPS only"`
+	CsrfSecure     bool   `default:"true" desc:"CSRF HTTPS only"`
 }
 
 func main() {
