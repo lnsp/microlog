@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2019-06-10
+### Changed
+- New sidebar layout for profile view
+
 ## 2019-06-09
 ### Added
 - Protection against CSRF attacks is enabled by default
