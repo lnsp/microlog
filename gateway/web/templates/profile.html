@@ -1,34 +1,65 @@
 {{ define "content" }}
-<h1 class="profile-name">{{ .Name }}</small></h1>
-{{ if .Biography }}
-<div class="profile-biography">
-    <h3>
-        Biography
-    </h3>
-    <p>{{ .Biography }}</p>
+<style>
+.profile-wrapper {
+    display: flex;
+}
+.portrait-section {
+    flex-grow: 0.3;
+    max-width: 288px;
+    margin-right: 1rem;
+}
+.content-section {
+    flex-grow: 1;
+}
+.nav-horizontal {
+    display: block;
+}
+@media (max-width: 600px) {
+    .profile-wrapper {
+        flex-direction: column;
+    }
+    .profile-settings .nav-horizontal a {
+        display: block;
+        margin: 0.5rem 0;
+    }
+}
+</style>
+<div class="profile-wrapper">
+<div class="portrait-section">
+    <h1 class="profile-name">{{ .Name }}</small></h1>
+    {{ if .Biography }}
+    <div class="profile-biography">
+        <h3>
+            Biography
+        </h3>
+        <p>{{ .Biography }}</p>
+    </div>
+    {{ end }}
 </div>
-{{ end }}
-{{ if .Self }}
-<div class="profile-settings">
-    <h3>Settings</h3>
-    <nav class="nav-horizontal nav-actions">
-        <a href="/profile/edit">edit biography</a>
-        <a href="/auth/forgot">reset password</a>
-        <a href="/auth/delete">delete account</a>
-    </nav>
+<div class="content-section">
+    {{ if .Self }}
+    <div class="profile-settings">
+        <h3>Settings</h3>
+        <nav class="nav-horizontal nav-actions">
+            <a href="/profile/edit">edit biography</a>
+            <a href="/auth/forgot">reset password</a>
+            <a href="/auth/delete">delete account</a>
+        </nav>
+    </div>
+    {{ end }}
+    <div class="profile-posts">
+        <h3>Publications</h3>
+        <ul class="item-listing">
+            {{ range .Posts }}
+            <li class="item-flex">
+                <div class="item-entry"><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a><br><small>on {{ .Date }}</small></div>
+            </li>
+            {{ else }}
+            <li class="item-flex"><div class="item-entry">This user has not published any posts yet.</div></li>
+            {{ end }}
+        </ul>
+    </div>
 </div>
-{{ end }}
-<div class="profile-posts">
-    <h3>Publications</h3>
-    <ul class="item-listing">
-        {{ range .Posts }}
-        <li class="item-flex">
-            <div class="item-entry"><a href="/{{ .Author }}/{{ .ID }}/">{{ .Title }}</a><br><small>on {{ .Date }}</small></div>
-        </li>
-        {{ else }}
-        <li class="item-flex"><div class="item-entry">This user has not published any posts yet.</div></li>
-        {{ end }}
-    </ul>
 </div>
 {{ end }}
 {{ define "title" }}Profile of {{ .Name }}{{ end }}
