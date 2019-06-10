@@ -21,9 +21,10 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -installsuffix cgo -ldflags='-w -s' -o /bin/mail
 
 # Copy into scratch image
-FROM scratch
+FROM alpine:3.9
+RUN apk update && apk add ca-certificates
 WORKDIR /app
 COPY --from=builder /src/mail/templates /app/templates
-COPY --from=builder /bin/mail /mail
-COPY --from=builder /bin/grpc_health_probe /grpc_health_probe
-ENTRYPOINT ["/mail"]
+COPY --from=builder /bin/mail /bin/mail
+COPY --from=builder /bin/grpc_health_probe /bin/grpc_health_probe
+ENTRYPOINT ["/bin/mail"]

@@ -21,8 +21,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -installsuffix cgo -ldflags='-w -s' -o /bin/session
 
 # Copy into scratch image
-FROM scratch
+FROM alpine:3.9
 WORKDIR /app
-COPY --from=builder /bin/session /session
-COPY --from=builder /bin/grpc_health_probe /grpc_health_probe
-ENTRYPOINT ["/session"]
+COPY --from=builder /bin/session /bin/session
+COPY --from=builder /bin/grpc_health_probe /bin/grpc_health_probe
+ENTRYPOINT ["/bin/session"]
