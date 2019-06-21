@@ -11,5 +11,6 @@ The application is split up into multiple services. The only one the customer di
 Other services do
 - send emails for confirmation and password reset
 - creating and verifying user sessions
+- managing user profiles
 
 The goal is to strip down the `gateway` service to a bare minimum, so we can easily replace it later with an REST gateway for a single-page application or similar.
