@@ -12,7 +12,7 @@ pipeline {
       }
     }
     stage('Deploy') {
-      when { branch: 'master' }
+      when { branch 'master' }
       steps {
         sh 'scripts/deploy_jenkins.sh'
       }
