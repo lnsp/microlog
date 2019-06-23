@@ -34,6 +34,4 @@ services:
     depends_on:
       - web_db
     restart: always
-    volumes:
-      - ./micro.db:/app/micro.db
     env_file: .env
