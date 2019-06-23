@@ -12,8 +12,14 @@ pipeline {
       }
     }
     stage('Deploy') {
+      when { branch: 'master' }
       steps {
         sh 'scripts/deploy_jenkins.sh'
+      }
+    }
+    post {
+      always {
+        deleteDir()
       }
     }
   }
