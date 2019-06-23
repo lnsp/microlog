@@ -1,9 +1,9 @@
 pipeline {
   agent any
   stages {
-    stage('Deploy') {
+    stage('') {
       steps {
-        sh 'scripts/deploy.sh staging'
+        sh 'scripts/deploy_jenkins.sh'
       }
     }
   }
