@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Deploy') {
       steps {
-        sh 'microlog/scripts/deploy.sh staging'
+        sh 'scripts/deploy.sh staging'
       }
     }
   }
