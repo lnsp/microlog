@@ -17,10 +17,10 @@ pipeline {
         sh 'scripts/deploy_jenkins.sh'
       }
     }
-    post {
-      always {
-        deleteDir()
-      }
+  }
+  post {
+    always {
+      deleteDir()
     }
   }
 }
