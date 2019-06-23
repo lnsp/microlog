@@ -7,18 +7,13 @@ pipeline {
   stages {
     stage('Configure environment') {
       steps {
-        sh 'echo $ENV_CONF > .env'
-        sh 'echo $ENV_CONF_STAGING > .env.staging'
+        sh 'cp $ENV_CONF .env'
+        sh 'cp $ENV_CONF_STAGING .env.staging'
       }
     }
     stage('Deploy') {
       steps {
         sh 'scripts/deploy_jenkins.sh'
-      }
-    }
-    stage('Cleanup') {
-      steps {
-        sh 'rm .env*'
       }
     }
   }
