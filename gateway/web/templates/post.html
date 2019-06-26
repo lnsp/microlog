@@ -7,14 +7,79 @@
 <div class="post-content">
     <p>{{ .HTMLContent }}</p>
 </div>
-<nav class="nav-horizontal nav-actions">
-    {{ if .Self }}
-    <a href="edit">edit</a>
-    <a href="delete">delete</a>
-    {{ else }}
-    <a href="report">report</a>
-    {{ end }}
-    <a href="like">{{ if .Liked }}unlike{{ else }}like{{ end }}</a>
+<style>
+.hover-action-button {
+    height: 1em;
+    width: 1em;
+    display: inline-block;
+    image-rendering: pixelated;
+    background-size: 1em 1em;
+    background-repeat: no-repeat;
+    transition: transform 0.2s ease-in-out, background-image 0.3s ease-in-out;
+}
+.hover-action-button:hover {
+    transform: scale(1.3);
+    border-bottom: none;
+}
+.hover-action-button:active {
+    transform: scale(1.1);
+    border-bottom: none;
+}
+.like-button {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAPUlEQVQokWNgIBf8dwj7D8P4xFAk0BWhi2EoxmYAhhiGdQScTZ4GYjQR9AdOxXgFCRmGKx6IciuxfiNoMgCleHaZimGrfAAAAABJRU5ErkJggg==');
+}
+.like-button:hover {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAPUlEQVQokWNgIBf8b0r4D8P4xFAk0BWhi2EoxmYAhhiGdQScTZ4GYjQR9AdOxXgFCRmGKx6IciuxfiNoMgAXi4RBGCb16wAAAABJRU5ErkJggg==');
+}
+.unlike-button {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAMElEQVQokWNgIBf8dwj7D8P4xDAk8GGSFMM1DUINJHua2JAiGBcEFePSRFKsY5MDALaE8lmTvjEIAAAAAElFTkSuQmCC');
+}
+.unlike-button:hover {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAMElEQVQokWNgIBf8b0r4D8P4xDAk8GGSFMM1DUINJHua2JAiGBcEFePSRFKsY5MDADrmDlD6I6iKAAAAAElFTkSuQmCC');
+}
+.post-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.post-actions::before {
+    display: none;
+}
+.right-action-block::after {
+    content: '<';
+    margin-left: 1em;
+}
+.left-action-block {
+    display: flex;
+}
+@media (max-width: 600px) {
+    .like-count-text {
+        display: none;
+    }
+    .right-action-block a {
+        margin: 0rem 0.25rem;
+    }
+    .right-action-block a:first-child {
+        margin-left: 0;
+    }
+    .right-action-block a:last-child {
+        margin-right: 0;
+    }
+}
+</style>
+<nav class="nav-horizontal nav-actions post-actions">
+    <div class="left-action-block">
+        <a href="like" class="hover-action-button {{ if .Liked }}unlike-button{{ else }}like-button{{ end }}"></a>
+        <span>{{ .LikeCount }} <span class="like-count-text">{{ if eq 1 .LikeCount}}person{{else}}people{{ end }} liked this</span></span>
+    </div>
+    <div class="right-action-block">
+        {{ if .Self }}
+        <a href="edit" style="align-self: end">edit</a>
+        <a href="delete" style="align-self: end">delete</a>
+        {{ else }}
+        <a href="report" style="align-self: end">report</a>
+        {{ end }}
+    </div>
     <!--<a href="comment">comment</a>!-->
     <!-- All post actions come here-->
     <!-- TODO: Add likes and comments -->

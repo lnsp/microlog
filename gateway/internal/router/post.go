@@ -22,6 +22,7 @@ type postContext struct {
 	Date        string
 	Self        bool
 	Liked       bool
+	LikeCount   int
 }
 
 func (router *Router) postRedirect(w http.ResponseWriter, r *http.Request) {
@@ -171,6 +172,11 @@ func (router *Router) postContextWithID(r *http.Request, username string, id uin
 			Context: *ctx,
 		}
 	}
+	likes, err := router.Data.NumberOfLikes(id)
+	if err != nil {
+		ctx.ErrorMessage = "Number of likes missing."
+		likes = 0
+	}
 	rendered := blackfriday.MarkdownCommon([]byte(post.Content))
 	safe := bluemonday.UGCPolicy().SanitizeBytes(rendered)
 	return postContext{
@@ -183,6 +189,7 @@ func (router *Router) postContextWithID(r *http.Request, username string, id uin
 		HTMLContent: template.HTML(safe),
 		Date:        post.CreatedAt.Format(timeFormat),
 		Liked:       ctx.SignedIn && router.Data.HasLiked(ctx.UserID, post.ID),
+		LikeCount:   likes,
 	}
 }
 
