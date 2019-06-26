@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2019-06-26
+### Changed
+- Improved post like visual feedback
+
 ## 2019-06-10
 ### Changed
 - New sidebar layout for profile view
